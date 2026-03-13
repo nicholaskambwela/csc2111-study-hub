@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CSC 2111 — Computer Architecture Study Hub</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600;700&family=Unbounded:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #050508;
+    --surface: #0e0e16;
+    --card: #13131f;
+    --card-hover: #18182a;
+    --accent: #e8ff47;
+    --accent2: #ff4d6d;
+    --accent3: #47c8ff;
+    --text: #f0f0f8;
+    --muted: #5a5a78;
+    --border: #1e1e32;
+  }
+
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'IBM Plex Mono', monospace;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Scanline overlay */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,0,0,0.08) 2px,
+      rgba(0,0,0,0.08) 4px
+    );
+    pointer-events: none;
+    z-index: 100;
+  }
+
+  /* Noise texture */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.4;
+  }
+
+  /* HERO */
+  .hero {
+    position: relative;
+    z-index: 1;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 60px 40px;
+    overflow: hidden;
+  }
+
+  /* Big decorative text behind hero */
+  .hero-bg-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-family: 'Unbounded', sans-serif;
+    font-size: clamp(120px, 20vw, 280px);
+    font-weight: 900;
+    color: transparent;
+    -webkit-text-stroke: 1px rgba(232,255,71,0.04);
+    white-space: nowrap;
+    pointer-events: none;
+    letter-spacing: -10px;
+    user-select: none;
+  }
+
+  /* Floating orbs */
+  .orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    pointer-events: none;
+    animation: drift 12s ease-in-out infinite alternate;
+  }
+  .orb1 { width: 400px; height: 400px; background: rgba(232,255,71,0.06); top: -100px; right: -100px; animation-delay: 0s; }
+  .orb2 { width: 300px; height: 300px; background: rgba(71,200,255,0.05); bottom: -50px; left: -50px; animation-delay: -4s; }
+  .orb3 { width: 200px; height: 200px; background: rgba(255,77,109,0.05); top: 40%; left: 40%; animation-delay: -8s; }
+
+  @keyframes drift {
+    from { transform: translate(0, 0) scale(1); }
+    to { transform: translate(30px, -30px) scale(1.1); }
+  }
+
+  .hero-inner {
+    position: relative;
+    z-index: 2;
+    max-width: 900px;
+  }
+
+  .hero-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(232,255,71,0.08);
+    border: 1px solid rgba(232,255,71,0.2);
+    color: var(--accent);
+    font-size: 11px;
+    letter-spacing: 3px;
+    padding: 7px 14px;
+    margin-bottom: 28px;
+    text-transform: uppercase;
+  }
+
+  .hero-tag::before {
+    content: '';
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    animation: pulse 1.5s ease infinite;
+  }
+
+  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(0.7)} }
+
+  h1 {
+    font-family: 'Unbounded', sans-serif;
+    font-size: clamp(36px, 6vw, 82px);
+    font-weight: 900;
+    line-height: 1.0;
+    letter-spacing: -2px;
+    margin-bottom: 24px;
+  }
+
+  h1 .line1 { display: block; color: var(--text); }
+  h1 .line2 { display: block; color: var(--accent); }
+  h1 .line3 { display: block; color: var(--muted); font-size: 0.45em; letter-spacing: 4px; font-weight: 400; font-family: 'IBM Plex Mono', monospace; margin-top: 12px; }
+
+  .hero-desc {
+    max-width: 520px;
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.8;
+    margin-bottom: 40px;
+  }
+
+  .hero-stats {
+    display: flex;
+    gap: 32px;
+    flex-wrap: wrap;
+  }
+
+  .stat {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .stat-num {
+    font-family: 'Unbounded', sans-serif;
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--accent);
+    line-height: 1;
+  }
+
+  .stat-label {
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+
+  /* Divider */
+  .section-divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--border), transparent);
+    margin: 0 40px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* LESSONS SECTION */
+  .lessons-section {
+    position: relative;
+    z-index: 1;
+    padding: 80px 40px;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  .section-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 40px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .section-title {
+    font-family: 'Unbounded', sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+  }
+
+  .section-meta {
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  /* Lesson grid */
+  .lessons-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 16px;
+  }
+
+  .lesson-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 24px;
+    text-decoration: none;
+    color: inherit;
+    display: block;
+    transition: background 0.2s, border-color 0.2s, transform 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .lesson-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 3px;
+    height: 100%;
+    background: var(--card-accent, var(--accent));
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .lesson-card:hover {
+    background: var(--card-hover);
+    border-color: rgba(232,255,71,0.2);
+    transform: translateY(-2px);
+  }
+
+  .lesson-card:hover::before { opacity: 1; }
+
+  .lesson-card.locked {
+    opacity: 0.4;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+
+  .card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 16px;
+  }
+
+  .lesson-number {
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+
+  .status-badge {
+    font-size: 10px;
+    letter-spacing: 1px;
+    padding: 4px 8px;
+    border-radius: 2px;
+    text-transform: uppercase;
+  }
+
+  .status-badge.available { background: rgba(232,255,71,0.1); color: var(--accent); border: 1px solid rgba(232,255,71,0.2); }
+  .status-badge.coming { background: rgba(90,90,120,0.2); color: var(--muted); border: 1px solid var(--border); }
+  .status-badge.exam { background: rgba(255,77,109,0.1); color: var(--accent2); border: 1px solid rgba(255,77,109,0.2); }
+
+  .lesson-icon {
+    font-size: 36px;
+    margin-bottom: 14px;
+    display: block;
+  }
+
+  .lesson-title {
+    font-family: 'Unbounded', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    line-height: 1.3;
+    color: var(--text);
+  }
+
+  .lesson-desc {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.7;
+    margin-bottom: 16px;
+  }
+
+  .lesson-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .tag {
+    font-size: 10px;
+    letter-spacing: 1px;
+    padding: 3px 8px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    border-radius: 2px;
+    text-transform: uppercase;
+  }
+
+  /* EXAM SECTION */
+  .exam-section {
+    position: relative;
+    z-index: 1;
+    padding: 0 40px 80px;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  .exam-banner {
+    background: linear-gradient(135deg, rgba(255,77,109,0.08), rgba(255,77,109,0.03));
+    border: 1px solid rgba(255,77,109,0.2);
+    border-radius: 2px;
+    padding: 28px 32px;
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+
+  .exam-icon { font-size: 48px; flex-shrink: 0; }
+
+  .exam-info { flex: 1; min-width: 200px; }
+
+  .exam-label {
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: var(--accent2);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .exam-title {
+    font-family: 'Unbounded', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+
+  .exam-desc { font-size: 13px; color: var(--muted); line-height: 1.6; }
+
+  .exam-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 13px 22px;
+    background: transparent;
+    border: 1px solid var(--accent2);
+    color: var(--accent2);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+    white-space: nowrap;
+  }
+
+  .exam-btn:hover { background: var(--accent2); color: #000; }
+
+  /* FOOTER */
+  footer {
+    position: relative;
+    z-index: 1;
+    border-top: 1px solid var(--border);
+    padding: 28px 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .footer-left { font-size: 12px; color: var(--muted); line-height: 1.6; }
+  .footer-right { font-size: 11px; color: var(--muted); letter-spacing: 1px; }
+
+  .footer-right span { color: var(--accent); }
+
+  /* How to use banner */
+  .howto {
+    position: relative;
+    z-index: 1;
+    margin: 0 40px 60px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 20px 24px;
+    display: flex;
+    gap: 24px;
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .howto-title {
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: var(--accent3);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .howto-steps {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    flex: 1;
+  }
+
+  .step {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.6;
+    flex: 1;
+    min-width: 180px;
+  }
+
+  .step-num {
+    width: 22px; height: 22px;
+    border: 1px solid var(--accent3);
+    color: var(--accent3);
+    border-radius: 2px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  @media (max-width: 640px) {
+    .hero { padding: 40px 20px; }
+    .lessons-section, .exam-section { padding-left: 20px; padding-right: 20px; }
+    .section-divider { margin: 0 20px; }
+    .howto { margin: 0 20px 40px; }
+    footer { padding: 24px 20px; }
+    h1 { letter-spacing: -1px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="orb orb1"></div>
+  <div class="orb orb2"></div>
+  <div class="orb orb3"></div>
+  <div class="hero-bg-text">CSC</div>
+
+  <div class="hero-inner">
+    <div class="hero-tag">University of Zambia · School of Natural Sciences</div>
+
+    <h1>
+      <span class="line1">COMPUTER</span>
+      <span class="line2">ARCHITECTURE</span>
+      <span class="line3">// CSC 2111 · Interactive Study Hub</span>
+    </h1>
+
+    <p class="hero-desc">
+      Interactive lessons, diagrams, and exam-style challenges for CSC 2111.
+      Built lesson by lesson — aligned to the course outline and past papers.
+    </p>
+
+    <div class="hero-stats">
+      <div class="stat">
+        <span class="stat-num" id="availableCount">1</span>
+        <span class="stat-label">Lessons Available</span>
+      </div>
+      <div class="stat">
+        <span class="stat-num">12</span>
+        <span class="stat-label">Total Topics</span>
+      </div>
+      <div class="stat">
+        <span class="stat-num">60%</span>
+        <span class="stat-label">Final Exam Weight</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- HOW TO USE -->
+<div class="howto" style="margin-top:40px;">
+  <div>
+    <div class="howto-title">⚡ How to use this</div>
+  </div>
+  <div class="howto-steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <span>Open a lesson and work through it fully — don't skip the challenges.</span>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <span>Each lesson maps to exam questions. Know which topic = which marks.</span>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <span>New lessons drop as the course progresses. Bookmark this page.</span>
+    </div>
+  </div>
+</div>
+
+<!-- LESSONS -->
+<section class="lessons-section">
+  <div class="section-header">
+    <div class="section-title">Lessons</div>
+    <div class="section-meta">12 topics · building from ground up</div>
+  </div>
+
+  <div class="lessons-grid">
+
+    <!-- LESSON 1 — Available -->
+    <a href="lesson1_computer_basics.html" class="lesson-card" style="--card-accent: var(--accent);">
+      <div class="card-top">
+        <span class="lesson-number">Lesson 01</span>
+        <span class="status-badge available">Available</span>
+      </div>
+      <span class="lesson-icon">🏗️</span>
+      <div class="lesson-title">Computer Structure & Function</div>
+      <div class="lesson-desc">The big picture. Structure vs Function, the four main components, the four basic functions. Directly answers 2018 Exam Q1.</div>
+      <div class="lesson-tags">
+        <span class="tag">Structure</span>
+        <span class="tag">Function</span>
+        <span class="tag">I/O Module</span>
+        <span class="tag">System Bus</span>
+      </div>
+    </a>
+
+    <!-- LESSON 2 — Coming Soon -->
+    <div class="lesson-card locked">
+      <div class="card-top">
+        <span class="lesson-number">Lesson 02</span>
+        <span class="status-badge coming">Coming Soon</span>
+      </div>
+      <span class="lesson-icon">🧠</span>
+      <div class="lesson-title">Inside the CPU</div>
+      <div class="lesson-desc">ALU, Control Unit, Registers — deep dive into the brain of the computer. Fetch-Decode-Execute cycle.</div>
+      <div class="lesson-tags">
+        <span class="tag">ALU</span>
+        <span class="tag">Control Unit</span>
+        <span class="tag">Registers</span>
+        <span class="tag">FDE Cycle</span>
+      </div>
+    </div>
+
+    <!-- LESSON 3 -->
+    <div class="lesson-card locked">
+      <div class="card-top">
+        <span class="lesson-number">Lesson 03</span>
+        <span class="status-badge coming">Coming Soon</span>
+      </div>
+      <span class="lesson-icon">📈</span>
+      <div class="lesson-title">Computer Evolution & Performance</div>
+      <div class="lesson-desc">History of computing eras, CPI, clock rate, performance equations. Covers 2018 Exam Q2 calculations.</div>
+      <div class="lesson-tags">
+        <span class="tag">CPI</span>
+        <span class="tag">Clock Rate</span>
+        <span class="tag">Performance</span>
+      </div>
+    </div>
+
+    <!-- LESSON 4 -->
+    <div class="lesson-card locked">
+      <div class="card-top">
+        <span class="lesson-number">Lesson 04</span>
+        <span class="status-badge coming">Coming Soon</span>
+      </div>
+      <span class="lesson-icon">🔗</span>
+      <div class="lesson-title">Computer Function & Interconnection</div>
+      <div class="lesson-desc">Buses, interrupts, I/O techniques, QPI physical layer. 2018 Exam Q3 (QPI diagram).</div>
+      <div class="lesson-tags">
+        <span class="tag">Buses</span>
+        <span class="tag">Interrupts</span>
+        <span class="tag">QPI</span>
+      </div>
+    </div>
+
+    <!-- LESSON 5 -->
+    <div class="lesson-card locked">
+      <div class="card-top">
+        <span class="lesson-number">Lesson 05</span>
+        <span class="status-badge coming">Coming Soon</span>
+      </div>
+      <span class="lesson-icon">⚡</span>
+      <div class="lesson-title">Cache Memory</div>
+      <div class="lesson-desc">Cache mapping (direct, associative, set-associative), replacement algorithms: FIFO, LRU, LFU.</div>
+      <div class="lesson-tags">
+        <span class="tag">Cache</span>
+        <span class="tag">FIFO/LRU/LFU</span>
+        <span class="tag">Mapping</span>
+      </div>
+    </div>
+
+    <!-- LESSON 6 -->
+    <div class="lesson-card locked">
+      <div class="card-top">
+        <span class="lesson-number">Lesson 06</span>
+        <span class="status-badge coming">Coming Soon</span>
+      </div>
+      <span class="lesson-icon">💾</span>
+      <div class="lesson-title">Internal Memory</div>
+      <div class="lesson-desc">RAM types — DRAM vs SRAM. Technology, speed, cost, size, and application differences.</div>
+      <div class="lesson-tags">
+        <span class="tag">DRAM</span>
+        <span class="tag">SRAM</span>
+        <span class="tag">Memory Hierarchy</span>
+      </div>
+    </div>
+
+    <!-- LESSON 7 -->
+    <div class="lesson-card locked">
+      <div class="card-top">
+        <span class="lesson-number">Lesson 07</span>
+        <span class="status-badge coming">Coming Soon</span>
+      </div>
+      <span class="lesson-icon">💿</span>
+      <div class="lesson-title">External Memory</div>
+      <div class="lesson-desc">Disk parameters, seek time, rotational latency, transfer time calculations. 2018 Exam Q4.</div>
+      <div class="lesson-tags">
+        <span class="tag">Disk</span>
+        <span class="tag">Seek Time</span>
+        <span class="tag">RPM</span>
+      </div>
+    </div>
+
+    <!-- LESSON 8 -->
+    <div class="lesson-card locked">
+      <div class="card-top">
+        <span class="lesson-number">Lesson 08</span>
+        <span class="status-badge coming">Coming Soon</span>
+      </div>
+      <span class="lesson-icon">🖥️</span>
+      <div class="lesson-title">Input / Output</div>
+      <div class="lesson-desc">I/O techniques: programmed I/O, interrupt-driven, DMA. I/O module structure in depth.</div>
+      <div class="lesson-tags">
+        <span class="tag">DMA</span>
+        <span class="tag">Interrupts</span>
+        <span class="tag">I/O Modes</span>
+      </div>
+    </div>
+
+    <!-- LESSON 9 -->
+    <div class="lesson-card locked">
+      <div class="card-top">
+        <span class="lesson-number">Lesson 09</span>
+        <span class="status-badge coming">Coming Soon</span>
+      </div>
+      <span class="lesson-icon">🔢</span>
+      <div class="lesson-title">Number Systems</div>
+      <div class="lesson-desc">Binary, hex, octal conversions. Two's complement, signed numbers, IEEE 754 floating point.</div>
+      <div class="lesson-tags">
+        <span class="tag">Binary</span>
+        <span class="tag">Hex</span>
+        <span class="tag">Two's Complement</span>
+      </div>
+    </div>
+
+    <!-- LESSON 10 -->
+    <div class="lesson-card locked">
+      <div class="card-top">
+        <span class="lesson-number">Lesson 10</span>
+        <span class="status-badge coming">Coming Soon</span>
+      </div>
+      <span class="lesson-icon">➕</span>
+      <div class="lesson-title">The ALU</div>
+      <div class="lesson-desc">Arithmetic operations, logic gates, ALU design, overflow detection, flags.</div>
+      <div class="lesson-tags">
+        <span class="tag">ALU</span>
+        <span class="tag">Arithmetic</span>
+        <span class="tag">Logic Gates</span>
+      </div>
+    </div>
+
+    <!-- LESSON 11 -->
+    <div class="lesson-card locked">
+      <div class="card-top">
+        <span class="lesson-number">Lesson 11</span>
+        <span class="status-badge coming">Coming Soon</span>
+      </div>
+      <span class="lesson-icon">🎛️</span>
+      <div class="lesson-title">The Control Unit</div>
+      <div class="lesson-desc">Hardwired vs microprogrammed control. Instruction cycle, micro-operations. Your toughest topic — tackled.</div>
+      <div class="lesson-tags">
+        <span class="tag">Control Unit</span>
+        <span class="tag">Microprogramming</span>
+        <span class="tag">Hardwired</span>
+      </div>
+    </div>
+
+    <!-- LESSON 12 -->
+    <div class="lesson-card locked">
+      <div class="card-top">
+        <span class="lesson-number">Lesson 12</span>
+        <span class="status-badge coming">Coming Soon</span>
+      </div>
+      <span class="lesson-icon">🔬</span>
+      <div class="lesson-title">The Full CPU</div>
+      <div class="lesson-desc">Putting it all together. Instruction set design, pipelining, RISC vs CISC.</div>
+      <div class="lesson-tags">
+        <span class="tag">CPU</span>
+        <span class="tag">Pipelining</span>
+        <span class="tag">RISC/CISC</span>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- EXAM BANNER -->
+<section class="exam-section">
+  <div class="exam-banner">
+    <div class="exam-icon">📝</div>
+    <div class="exam-info">
+      <div class="exam-label">Reference Material</div>
+      <div class="exam-title">2018 Final Exam Paper</div>
+      <div class="exam-desc">Every lesson is mapped to questions from the 2018 CSC 2111 final paper. Know which lesson covers which marks.</div>
+    </div>
+    <a href="CSC2111_2018_FE.pdf" class="exam-btn" target="_blank">View Exam Paper →</a>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-left">
+    CSC 2111 · Computer Organisation and Architecture<br>
+    University of Zambia · School of Natural Sciences
+  </div>
+  <div class="footer-right">
+    Built lesson by lesson · <span>UNZA 2025</span>
+  </div>
+</footer>
+
+</body>
+</html>

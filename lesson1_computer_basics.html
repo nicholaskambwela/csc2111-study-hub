@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CSC 2111 — Lesson 1: What IS a Computer?</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #12121a;
+    --card: #1a1a28;
+    --accent: #00f5c4;
+    --accent2: #ff6b35;
+    --accent3: #a78bfa;
+    --text: #e8e8f0;
+    --muted: #6b6b8a;
+    --border: #2a2a40;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Syne', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Animated background grid */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,245,196,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,245,196,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 40px 24px 80px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Header */
+  .header {
+    text-align: center;
+    margin-bottom: 48px;
+    animation: fadeDown 0.8s ease both;
+  }
+
+  .badge {
+    display: inline-block;
+    background: rgba(0,245,196,0.1);
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    padding: 6px 14px;
+    border-radius: 2px;
+    margin-bottom: 16px;
+    text-transform: uppercase;
+  }
+
+  h1 {
+    font-size: clamp(28px, 5vw, 48px);
+    font-weight: 800;
+    line-height: 1.1;
+    margin-bottom: 12px;
+  }
+
+  h1 span { color: var(--accent); }
+
+  .subtitle {
+    color: var(--muted);
+    font-size: 16px;
+    font-family: 'Space Mono', monospace;
+  }
+
+  /* Progress bar */
+  .progress-wrap {
+    background: var(--border);
+    border-radius: 2px;
+    height: 4px;
+    margin-bottom: 40px;
+    overflow: hidden;
+  }
+  .progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent3));
+    width: 0%;
+    transition: width 0.5s ease;
+    border-radius: 2px;
+  }
+
+  /* Section */
+  .section {
+    margin-bottom: 32px;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+  }
+  .section.visible { opacity: 1; transform: translateY(0); }
+
+  .section-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 3px;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  h2 {
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 14px;
+    color: var(--text);
+  }
+
+  p {
+    color: #c0c0d8;
+    line-height: 1.75;
+    font-size: 15px;
+    margin-bottom: 12px;
+  }
+
+  /* Computer Diagram */
+  .diagram {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 28px;
+    margin: 20px 0;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .diagram::before {
+    content: 'SYSTEM DIAGRAM';
+    position: absolute;
+    top: 12px; right: 16px;
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 2px;
+  }
+
+  .arch-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px;
+    margin-top: 8px;
+  }
+
+  .arch-box {
+    border-radius: 6px;
+    padding: 16px 12px;
+    text-align: center;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    position: relative;
+  }
+
+  .arch-box:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  }
+
+  .arch-box.cpu { background: linear-gradient(135deg, #1a1a3e, #2a1a5e); border: 1px solid var(--accent3); }
+  .arch-box.memory { background: linear-gradient(135deg, #1a2e1a, #1a4a2a); border: 1px solid var(--accent); }
+  .arch-box.io { background: linear-gradient(135deg, #2e1a1a, #4a2a1a); border: 1px solid var(--accent2); }
+
+  .arch-box .icon { font-size: 28px; margin-bottom: 8px; display: block; }
+  .arch-box .name {
+    font-weight: 700;
+    font-size: 13px;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .arch-box.cpu .name { color: var(--accent3); }
+  .arch-box.memory .name { color: var(--accent); }
+  .arch-box.io .name { color: var(--accent2); }
+
+  .arch-box .desc {
+    font-size: 11px;
+    color: var(--muted);
+    font-family: 'Space Mono', monospace;
+    line-height: 1.4;
+  }
+
+  /* Bus animation */
+  .bus-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    margin: 10px 0;
+  }
+
+  .bus-line {
+    height: 3px;
+    flex: 1;
+    background: linear-gradient(90deg, var(--accent3), var(--accent));
+    position: relative;
+    overflow: hidden;
+  }
+
+  .bus-line::after {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%;
+    width: 60%;
+    height: 100%;
+    background: white;
+    opacity: 0.6;
+    animation: busFlow 2s linear infinite;
+  }
+
+  .bus-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    padding: 0 8px;
+    text-align: center;
+    letter-spacing: 1px;
+  }
+
+  @keyframes busFlow {
+    to { left: 100%; }
+  }
+
+  /* Tooltip popup */
+  .tooltip-box {
+    background: var(--surface);
+    border: 1px solid var(--accent);
+    border-radius: 6px;
+    padding: 16px;
+    margin-top: 12px;
+    display: none;
+    font-size: 14px;
+    line-height: 1.6;
+    color: #d0d0e8;
+    animation: fadeIn 0.3s ease;
+  }
+  .tooltip-box.show { display: block; }
+  .tooltip-box strong { color: var(--accent); }
+
+  /* Analogy card */
+  .analogy {
+    background: linear-gradient(135deg, rgba(255,107,53,0.08), rgba(167,139,250,0.08));
+    border: 1px solid rgba(255,107,53,0.3);
+    border-radius: 8px;
+    padding: 20px 24px;
+    margin: 20px 0;
+  }
+  .analogy-title {
+    font-size: 12px;
+    letter-spacing: 2px;
+    color: var(--accent2);
+    font-family: 'Space Mono', monospace;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .analogy p { font-size: 15px; color: #d0d0e8; margin: 0; }
+
+  /* Quiz */
+  .quiz-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 24px;
+    margin: 24px 0;
+  }
+
+  .quiz-title {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--accent2);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+
+  .question { font-size: 16px; font-weight: 700; margin-bottom: 18px; line-height: 1.5; }
+
+  .options { display: flex; flex-direction: column; gap: 10px; }
+
+  .option {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 12px 16px;
+    cursor: pointer;
+    font-size: 14px;
+    color: #c0c0d8;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-family: 'Space Mono', monospace;
+  }
+
+  .option:hover { border-color: var(--accent3); color: var(--text); }
+  .option.correct { background: rgba(0,245,196,0.1); border-color: var(--accent); color: var(--accent); }
+  .option.wrong { background: rgba(255,107,53,0.1); border-color: var(--accent2); color: var(--accent2); }
+  .option.disabled { pointer-events: none; opacity: 0.6; }
+  .option.disabled.correct { opacity: 1; }
+
+  .opt-letter {
+    width: 26px; height: 26px;
+    border-radius: 4px;
+    background: var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700;
+    font-size: 12px;
+    flex-shrink: 0;
+  }
+
+  .feedback {
+    margin-top: 14px;
+    padding: 12px 16px;
+    border-radius: 6px;
+    font-size: 14px;
+    line-height: 1.6;
+    display: none;
+  }
+  .feedback.show { display: block; }
+  .feedback.correct-fb { background: rgba(0,245,196,0.08); border: 1px solid rgba(0,245,196,0.3); color: var(--accent); }
+  .feedback.wrong-fb { background: rgba(255,107,53,0.08); border: 1px solid rgba(255,107,53,0.3); color: #ff9b6b; }
+
+  /* Think challenge */
+  .think {
+    background: linear-gradient(135deg, rgba(167,139,250,0.1), rgba(0,245,196,0.05));
+    border: 1px solid rgba(167,139,250,0.4);
+    border-radius: 8px;
+    padding: 20px 24px;
+    margin: 20px 0;
+  }
+  .think-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: var(--accent3);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .think p { font-size: 15px; color: #d0d0e8; margin-bottom: 12px; }
+
+  textarea {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+    padding: 12px;
+    resize: vertical;
+    min-height: 80px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  textarea:focus { border-color: var(--accent3); }
+
+  /* Buttons */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 24px;
+    border-radius: 4px;
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s;
+    margin-top: 12px;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #000;
+  }
+  .btn-primary:hover { background: #00ddb0; transform: translateY(-1px); }
+
+  .btn-ghost {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+  }
+  .btn-ghost:hover { border-color: var(--accent3); color: var(--accent3); }
+
+  /* reveal answer */
+  .reveal-answer {
+    color: var(--muted);
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    text-decoration: underline;
+    margin-top: 8px;
+    display: block;
+  }
+  .answer-reveal { display: none; margin-top: 10px; color: var(--accent); font-size: 14px; line-height: 1.6; }
+  .answer-reveal.show { display: block; }
+
+  /* Key terms */
+  .terms-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin: 16px 0;
+  }
+  @media (max-width: 600px) { .terms-grid { grid-template-columns: 1fr; } .arch-grid { grid-template-columns: 1fr; } }
+
+  .term-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 14px 16px;
+  }
+  .term-name {
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    color: var(--accent);
+    margin-bottom: 6px;
+  }
+  .term-def { font-size: 13px; color: #b0b0c8; line-height: 1.5; }
+
+  /* Divider */
+  .divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 36px 0;
+  }
+
+  /* Score */
+  .score-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 12px 16px;
+    margin-bottom: 24px;
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .score-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); animation: pulse 1.5s ease infinite; }
+  @keyframes pulse { 0%,100%{opacity:1}50%{opacity:0.4} }
+
+  /* Animations */
+  @keyframes fadeDown { from { opacity:0; transform:translateY(-20px); } to { opacity:1; transform:translateY(0); } }
+  @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+
+  /* Next lesson teaser */
+  .next-lesson {
+    background: linear-gradient(135deg, var(--card), rgba(0,245,196,0.05));
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 24px;
+    margin-top: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .next-lesson .label { font-family: 'Space Mono', monospace; font-size: 11px; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 6px; }
+  .next-lesson .title { font-size: 18px; font-weight: 700; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="badge">CSC 2111 · Lesson 01</div>
+    <h1>What <span>IS</span> a Computer?</h1>
+    <p class="subtitle">// Structure · Function · Architecture</p>
+  </div>
+
+  <div class="score-bar">
+    <div class="score-dot"></div>
+    <span>INTERACTIVE LESSON — Click diagrams, answer questions, think critically</span>
+  </div>
+
+  <div class="progress-wrap">
+    <div class="progress-bar" id="progressBar"></div>
+  </div>
+
+  <!-- SECTION 1: The Big Question -->
+  <div class="section" id="s1">
+    <div class="section-label">01 — Foundation</div>
+    <h2>Structure vs Function — The Two Key Terms</h2>
+    <p>Before anything else, your exam asks this exact question: <strong>"Distinguish between Structure and Function."</strong> Let's understand it deeply, not just memorize it.</p>
+
+    <div class="terms-grid">
+      <div class="term-card">
+        <div class="term-name">🏗️ STRUCTURE</div>
+        <div class="term-def">How components are <strong>related</strong> to each other. The physical arrangement — what connects to what.</div>
+      </div>
+      <div class="term-card">
+        <div class="term-name">⚙️ FUNCTION</div>
+        <div class="term-def">What each component <strong>does</strong>. The operation or behaviour of each part individually.</div>
+      </div>
+    </div>
+
+    <div class="analogy">
+      <div class="analogy-title">🏠 Real World Analogy</div>
+      <p>Think of a <strong>house</strong>. The <em>structure</em> is how the rooms, walls, doors, and pipes are connected. The <em>function</em> is what each room does — the kitchen cooks food, the bedroom is for sleeping. A computer is the same: structure = wiring & layout, function = what each part does.</p>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- SECTION 2: The Four Components -->
+  <div class="section" id="s2">
+    <div class="section-label">02 — Architecture</div>
+    <h2>The General Structure of a Computer</h2>
+    <p>Every computer — no matter how old or new — is built from <strong>four main structural components</strong>. Click each box below to learn what it does:</p>
+
+    <div class="diagram">
+      <div class="arch-grid">
+        <div class="arch-box cpu" onclick="showInfo('cpu')">
+          <span class="icon">🧠</span>
+          <div class="name">CPU</div>
+          <div class="desc">Central Processing Unit</div>
+        </div>
+        <div class="arch-box memory" onclick="showInfo('memory')">
+          <span class="icon">💾</span>
+          <div class="name">Memory</div>
+          <div class="desc">Main / RAM Storage</div>
+        </div>
+        <div class="arch-box io" onclick="showInfo('io')">
+          <span class="icon">⌨️</span>
+          <div class="name">I/O</div>
+          <div class="desc">Input / Output Modules</div>
+        </div>
+      </div>
+
+      <div class="bus-row" style="margin-top:16px;">
+        <div class="bus-label">CPU</div>
+        <div class="bus-line"></div>
+        <div class="bus-label">SYSTEM BUS</div>
+        <div class="bus-line"></div>
+        <div class="bus-label">I/O</div>
+      </div>
+
+      <div id="infoBox" class="tooltip-box"></div>
+    </div>
+
+    <p>All these components communicate over a <strong>System Bus</strong> — a shared highway of wires that carries data, addresses, and control signals between components.</p>
+  </div>
+
+  <hr class="divider">
+
+  <!-- SECTION 3: Quiz 1 -->
+  <div class="section" id="s3">
+    <div class="quiz-card">
+      <div class="quiz-title">🧪 Challenge #1 — Test Your Understanding</div>
+      <div class="question">The CPU's clock speed is 3.4 GHz. This piece of information describes the CPU's ___?</div>
+      <div class="options" id="q1options">
+        <div class="option" onclick="answer(this,'q1','wrong')"><span class="opt-letter">A</span> Structure</div>
+        <div class="option" onclick="answer(this,'q1','correct')"><span class="opt-letter">B</span> Function / Performance characteristic</div>
+        <div class="option" onclick="answer(this,'q1','wrong')"><span class="opt-letter">C</span> Physical size</div>
+        <div class="option" onclick="answer(this,'q1','wrong')"><span class="opt-letter">D</span> Neither — it's a memory property</div>
+      </div>
+      <div class="feedback" id="q1feedback"></div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- SECTION 4: Functions of a Computer -->
+  <div class="section" id="s4">
+    <div class="section-label">03 — The Four Functions</div>
+    <h2>What Can a Computer DO? (4 Basic Functions)</h2>
+    <p>Every computer, from the oldest to the newest, can only do <strong>four fundamental things</strong>:</p>
+
+    <div class="terms-grid">
+      <div class="term-card">
+        <div class="term-name">1. DATA PROCESSING</div>
+        <div class="term-def">Transform data — add numbers, compare values, run logic. The CPU does this.</div>
+      </div>
+      <div class="term-card">
+        <div class="term-name">2. DATA STORAGE</div>
+        <div class="term-def">Remember data — short-term (RAM/cache) or long-term (hard drive).</div>
+      </div>
+      <div class="term-card">
+        <div class="term-name">3. DATA MOVEMENT</div>
+        <div class="term-def">Transfer data between components — from memory to CPU, from I/O to memory, etc.</div>
+      </div>
+      <div class="term-card">
+        <div class="term-name">4. CONTROL</div>
+        <div class="term-def">The Control Unit manages and coordinates all the above — it's the "manager" of the CPU.</div>
+      </div>
+    </div>
+
+    <div class="analogy">
+      <div class="analogy-title">🍳 Kitchen Analogy</div>
+      <p>A kitchen does the same four things: it <em>processes</em> raw ingredients into food, <em>stores</em> food in the fridge, <em>moves</em> ingredients from fridge to stove, and the chef <em>controls</em> everything. Your CPU is just a very fast, very precise kitchen.</p>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- SECTION 5: Quiz 2 -->
+  <div class="section" id="s5">
+    <div class="quiz-card">
+      <div class="quiz-title">🧪 Challenge #2 — Exam-Style Question</div>
+      <div class="question">When you type on a keyboard and the letter appears on screen, which two functions are primarily involved?</div>
+      <div class="options" id="q2options">
+        <div class="option" onclick="answer(this,'q2','wrong')"><span class="opt-letter">A</span> Data Storage + Control</div>
+        <div class="option" onclick="answer(this,'q2','correct')"><span class="opt-letter">B</span> Data Movement + Control</div>
+        <div class="option" onclick="answer(this,'q2','wrong')"><span class="opt-letter">C</span> Data Processing + Data Storage</div>
+        <div class="option" onclick="answer(this,'q2','wrong')"><span class="opt-letter">D</span> All four equally</div>
+      </div>
+      <div class="feedback" id="q2feedback"></div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- SECTION 6: Think Deeper -->
+  <div class="section" id="s6">
+    <div class="section-label">04 — Think Deeper</div>
+    <h2>Why Does This Matter For The Exam?</h2>
+    <p>Your 2018 exam asked: <em>"Distinguish between Structure and Function, then draw and describe the general structure and functions of an I/O module."</em></p>
+
+    <div class="think">
+      <div class="think-label">🧠 Brain Challenge — Think Before You Read</div>
+      <p>Before I show you the answer: Based on what you've learned, <strong>what do you think the function of an I/O module is?</strong> Write your thoughts below.</p>
+      <textarea id="thinkInput" placeholder="The I/O module's function is to..."></textarea>
+      <button class="reveal-answer" onclick="revealAnswer()">→ Show model answer</button>
+      <div class="answer-reveal" id="ioAnswer">
+        <strong>The I/O module has these functions:</strong><br><br>
+        1. <strong>Control & Timing</strong> — coordinates data flow between external devices and the internal bus.<br>
+        2. <strong>CPU Communication</strong> — receives commands from the CPU.<br>
+        3. <strong>Device Communication</strong> — sends/receives data to/from external devices (keyboard, disk, etc).<br>
+        4. <strong>Data Buffering</strong> — temporarily stores data to handle speed mismatches between CPU and slow I/O devices.<br>
+        5. <strong>Error Detection</strong> — detects transmission errors.<br><br>
+        How close were you? 💡
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- SECTION 7: Final Quiz -->
+  <div class="section" id="s7">
+    <div class="quiz-card">
+      <div class="quiz-title">🧪 Challenge #3 — Past Exam Style</div>
+      <div class="question">Which component of the CPU is responsible for the "Control" function — coordinating operations and managing instruction execution?</div>
+      <div class="options" id="q3options">
+        <div class="option" onclick="answer(this,'q3','wrong')"><span class="opt-letter">A</span> ALU (Arithmetic Logic Unit)</div>
+        <div class="option" onclick="answer(this,'q3','correct')"><span class="opt-letter">B</span> Control Unit (CU)</div>
+        <div class="option" onclick="answer(this,'q3','wrong')"><span class="opt-letter">C</span> Registers</div>
+        <div class="option" onclick="answer(this,'q3','wrong')"><span class="opt-letter">D</span> Cache Memory</div>
+      </div>
+      <div class="feedback" id="q3feedback"></div>
+    </div>
+  </div>
+
+  <!-- Next Lesson Teaser -->
+  <div class="section" id="s8">
+    <div class="next-lesson">
+      <div>
+        <div class="label">Coming Next →</div>
+        <div class="title">Lesson 02: Inside the CPU — ALU, CU & Registers</div>
+        <p style="font-size:13px;color:var(--muted);margin-top:6px;font-family:'Space Mono',monospace">Your most challenging topic — broken down step by step.</p>
+      </div>
+      <div style="font-size:40px">🔬</div>
+    </div>
+  </div>
+
+</div><!-- /container -->
+
+<script>
+  // Info data for architecture boxes
+  const infoData = {
+    cpu: {
+      title: '🧠 CPU — Central Processing Unit',
+      text: 'This is the "brain" of the computer. It has three parts inside it: the <strong>ALU</strong> (does maths & logic), the <strong>Control Unit</strong> (manages everything), and <strong>Registers</strong> (tiny ultra-fast storage). The CPU fetches instructions from memory, decodes them, and executes them — this is called the <strong>Fetch-Decode-Execute cycle</strong>. The 2018 exam Question 3 is all about this!',
+      color: 'var(--accent3)'
+    },
+    memory: {
+      title: '💾 Main Memory (RAM)',
+      text: 'Stores both the program being run AND the data it\'s working on. It\'s volatile — it loses everything when power is off. The CPU constantly reads from and writes to memory during program execution. Memory is addressed in locations, and your exam covers how addresses are divided for cache mapping.',
+      color: 'var(--accent)'
+    },
+    io: {
+      title: '⌨️ I/O Modules',
+      text: 'Connect the computer to the outside world: keyboard, mouse, screen, hard drive, network. An I/O module is an interface that handles the communication between the slow external device and the fast internal bus. The 2018 exam Question 1 asks you to draw and explain this module!',
+      color: 'var(--accent2)'
+    }
+  };
+
+  function showInfo(type) {
+    const box = document.getElementById('infoBox');
+    const d = infoData[type];
+    box.innerHTML = `<strong style="color:${d.color}">${d.title}</strong><br><br>${d.text}`;
+    box.classList.add('show');
+    updateProgress();
+  }
+
+  // Quiz answers
+  const feedbacks = {
+    q1: {
+      correct: '✅ Correct! Clock speed (3.4 GHz) describes what the CPU can DO — how fast it executes instructions. That\'s its <strong>function</strong> (or performance characteristic). If you said "how many transistors it has", that would be structure.',
+      wrong: '❌ Not quite. Clock speed tells us HOW FAST the CPU operates — that\'s about its behaviour/capability, which is <strong>function</strong>. Structure would describe physical connections, e.g., "the CPU connects to RAM via the front-side bus."'
+    },
+    q2: {
+      correct: '✅ Excellent thinking! The keystroke is <strong>moved</strong> (data movement) from the keyboard through the I/O module to the CPU, and the <strong>Control Unit</strong> coordinates the whole process. Data processing would only be involved if a calculation happened.',
+      wrong: '❌ Think again. No data is being calculated or permanently stored here — data is simply traveling from point A (keyboard) to point B (screen). That\'s <strong>Data Movement</strong>, coordinated by <strong>Control</strong>.'
+    },
+    q3: {
+      correct: '✅ Spot on! The <strong>Control Unit (CU)</strong> is the manager of the CPU. It doesn\'t process data itself — instead it directs the ALU, manages registers, and coordinates instruction execution. This is a very common exam question!',
+      wrong: '❌ Not quite. The ALU does arithmetic/logic, Registers are tiny storage, and Cache is fast memory — none of them coordinate operations. The <strong>Control Unit</strong> is the "traffic controller" of the CPU.'
+    }
+  };
+
+  let score = 0;
+  let answered = { q1: false, q2: false, q3: false };
+
+  function answer(el, qid, result) {
+    if (answered[qid]) return;
+    answered[qid] = true;
+
+    const opts = document.getElementById(qid + 'options').querySelectorAll('.option');
+    opts.forEach(o => o.classList.add('disabled'));
+
+    const fb = document.getElementById(qid + 'feedback');
+    if (result === 'correct') {
+      el.classList.add('correct');
+      fb.innerHTML = feedbacks[qid].correct;
+      fb.className = 'feedback show correct-fb';
+      score++;
+    } else {
+      el.classList.add('wrong');
+      fb.innerHTML = feedbacks[qid].wrong;
+      fb.className = 'feedback show wrong-fb';
+      // highlight correct
+      if (qid === 'q1') opts[1].classList.add('correct');
+      if (qid === 'q2') opts[1].classList.add('correct');
+      if (qid === 'q3') opts[1].classList.add('correct');
+    }
+    updateProgress();
+  }
+
+  function revealAnswer() {
+    document.getElementById('ioAnswer').classList.add('show');
+  }
+
+  function updateProgress() {
+    const total = 6; // 3 questions + 3 diagram clicks (approx)
+    const done = Object.values(answered).filter(Boolean).length;
+    const pct = Math.min(100, Math.round((done / 3) * 100));
+    document.getElementById('progressBar').style.width = pct + '%';
+  }
+
+  // Intersection Observer for scroll animations
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) e.target.classList.add('visible');
+    });
+  }, { threshold: 0.1 });
+
+  document.querySelectorAll('.section').forEach(s => observer.observe(s));
+</script>
+</body>
+</html>
