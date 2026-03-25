@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CSC 2111 — Key Terminology</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #12121a;
+    --card: #1a1a26;
+    --border: #2a2a3e;
+    --accent: #6c63ff;
+    --accent2: #ff6584;
+    --accent3: #43e97b;
+    --text: #e8e8f0;
+    --muted: #7878a0;
+    --mono: 'Space Mono', monospace;
+    --sans: 'Syne', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Animated background grid */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(108,99,255,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(108,99,255,0.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem 4rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  header {
+    margin-bottom: 2.5rem;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 1.5rem;
+  }
+
+  .course-tag {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    padding: 0.25rem 0.6rem;
+    border-radius: 2px;
+    margin-bottom: 0.8rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  h1 {
+    font-size: clamp(1.8rem, 5vw, 2.8rem);
+    font-weight: 800;
+    line-height: 1.1;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(135deg, var(--text), var(--accent));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .subtitle {
+    color: var(--muted);
+    font-size: 0.9rem;
+    font-family: var(--mono);
+  }
+
+  /* Stats bar */
+  .stats {
+    display: flex;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+  }
+
+  .stat {
+    background: var(--card);
+    border: 1px solid var(--border);
+    padding: 0.6rem 1rem;
+    border-radius: 6px;
+    font-family: var(--mono);
+    font-size: 0.8rem;
+  }
+
+  .stat span {
+    color: var(--accent);
+    font-weight: 700;
+  }
+
+  /* Controls */
+  .controls {
+    display: flex;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .search-box {
+    flex: 1;
+    min-width: 200px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 0.85rem;
+    padding: 0.65rem 1rem;
+    border-radius: 6px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .search-box:focus { border-color: var(--accent); }
+  .search-box::placeholder { color: var(--muted); }
+
+  .filter-btn {
+    background: var(--card);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    padding: 0.65rem 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.05em;
+  }
+
+  .filter-btn:hover, .filter-btn.active {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(108,99,255,0.1);
+  }
+
+  /* Mode toggle */
+  .mode-toggle {
+    background: var(--accent);
+    border: none;
+    color: white;
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    padding: 0.65rem 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: opacity 0.2s;
+    letter-spacing: 0.05em;
+  }
+
+  .mode-toggle:hover { opacity: 0.85; }
+
+  /* Category sections */
+  .category {
+    margin-bottom: 2.5rem;
+  }
+
+  .category-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+  }
+
+  .category-label {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--muted);
+    padding: 0.2rem 0.6rem;
+    border: 1px solid var(--border);
+    border-radius: 3px;
+  }
+
+  .category-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .cat-core .category-dot { background: var(--accent); }
+  .cat-memory .category-dot { background: var(--accent2); }
+  .cat-execution .category-dot { background: var(--accent3); }
+  .cat-system .category-dot { background: #ffd166; }
+
+  .terms-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 0.75rem;
+  }
+
+  /* Term cards */
+  .term-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.1rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .term-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .cat-core .term-card::before { background: var(--accent); }
+  .cat-memory .term-card::before { background: var(--accent2); }
+  .cat-execution .term-card::before { background: var(--accent3); }
+  .cat-system .term-card::before { background: #ffd166; }
+
+  .term-card:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(108,99,255,0.15);
+  }
+
+  .term-card:hover::before { opacity: 1; }
+
+  .term-name {
+    font-weight: 600;
+    font-size: 0.95rem;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+
+  .term-abbr {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    color: var(--accent);
+    border: 1px solid rgba(108,99,255,0.3);
+    padding: 0.15rem 0.4rem;
+    border-radius: 3px;
+    white-space: nowrap;
+  }
+
+  .term-def {
+    font-size: 0.82rem;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
+  /* Quiz mode */
+  .quiz-mode .term-def {
+    display: none;
+  }
+
+  .quiz-mode .term-card {
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .quiz-mode .term-card.revealed .term-def {
+    display: block;
+    animation: fadeIn 0.3s ease;
+  }
+
+  .quiz-mode .term-card:not(.revealed)::after {
+    content: 'TAP TO REVEAL';
+    display: block;
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    margin-top: 0.5rem;
+  }
+
+  .reveal-hint {
+    display: none;
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    color: var(--accent2);
+    margin-bottom: 1rem;
+    padding: 0.5rem 1rem;
+    border: 1px solid rgba(255,101,132,0.3);
+    border-radius: 6px;
+    background: rgba(255,101,132,0.05);
+  }
+
+  .quiz-mode ~ * .reveal-hint,
+  .quiz-mode + .reveal-hint { display: block; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Empty state */
+  .empty-state {
+    text-align: center;
+    padding: 3rem;
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: 0.85rem;
+    display: none;
+  }
+
+  .hidden { display: none !important; }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  /* Responsive */
+  @media (max-width: 600px) {
+    .terms-grid { grid-template-columns: 1fr; }
+    .controls { flex-direction: column; align-items: stretch; }
+    .filter-btn, .mode-toggle { text-align: center; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div class="course-tag">CSC 2111 — Computer Organisation &amp; Architecture</div>
+    <h1>Key Terminology</h1>
+    <p class="subtitle">// your vocab cheat sheet — no excuses for not knowing these</p>
+  </header>
+
+  <div class="stats">
+    <div class="stat">Total Terms: <span id="total-count">0</span></div>
+    <div class="stat">Visible: <span id="visible-count">0</span></div>
+    <div class="stat">Mode: <span id="mode-label">Browse</span></div>
+  </div>
+
+  <div class="controls">
+    <input class="search-box" type="text" placeholder="Search terms..." id="search" oninput="filterTerms()">
+    <button class="filter-btn active" onclick="filterCat('all', this)">All</button>
+    <button class="filter-btn" onclick="filterCat('core', this)">Core CPU</button>
+    <button class="filter-btn" onclick="filterCat('memory', this)">Memory</button>
+    <button class="filter-btn" onclick="filterCat('execution', this)">Execution</button>
+    <button class="filter-btn" onclick="filterCat('system', this)">System</button>
+    <button class="mode-toggle" onclick="toggleQuiz()" id="quiz-btn">🧠 Quiz Mode</button>
+  </div>
+
+  <div id="reveal-hint" class="reveal-hint">📌 Quiz mode active — tap any card to reveal its definition. See if you ACTUALLY know it before clicking.</div>
+
+  <div id="terms-container"></div>
+  <div class="empty-state" id="empty-state">No terms match your search. Try something else.</div>
+
+</div>
+
+<script>
+const terms = {
+  core: {
+    label: "Core CPU Components",
+    color: "#6c63ff",
+    cat: "cat-core",
+    items: [
+      { name: "ALU", abbr: "ALU", def: "Arithmetic Logic Unit — the part of the CPU that performs arithmetic (add, subtract) and logical operations (AND, OR, NOT). Think of it as the calculator inside the calculator." },
+      { name: "Control Unit", abbr: "CU", def: "Directs all CPU operations — manages instruction fetch, decode, and execution flow. It's the 'manager' that tells everyone else what to do but doesn't do any real work itself." },
+      { name: "Registers", abbr: "REG", def: "Tiny, blazing-fast storage locations inside the CPU. Examples: MAR (Memory Address Register) holds addresses, MDR (Memory Data Register) holds data in transit. If RAM is your desk, registers are your hands." },
+      { name: "Program Counter", abbr: "PC", def: "A special register that stores the address of the NEXT instruction to be executed. It automatically increments after each fetch — like a bookmark that keeps moving forward." },
+      { name: "Instruction Register", abbr: "IR", def: "Holds the current instruction being decoded and executed. Once fetched from memory, it sits here while the CU figures out what to do with it." },
+      { name: "Bus", abbr: "BUS", def: "Shared pathways (wires) that carry data, addresses, or control signals between CPU, memory, and I/O. Three types: data bus, address bus, control bus." },
+      { name: "Clock", abbr: "CLK", def: "The heartbeat of the CPU. A clock cycle is the basic unit of time; frequency in GHz = billions of cycles per second. Higher frequency = more instructions per second (generally)." },
+    ]
+  },
+  memory: {
+    label: "Memory & Storage Hierarchy",
+    color: "#ff6584",
+    cat: "cat-memory",
+    items: [
+      { name: "RAM", abbr: "RAM", def: "Random Access Memory — volatile main memory that stores active programs and data. 'Volatile' means it all disappears when you turn off the computer. Your running browser tabs? That's RAM." },
+      { name: "ROM", abbr: "ROM", def: "Read-Only Memory — non-volatile memory used for firmware and boot instructions. It survives a power cut. Your computer uses it to know HOW to start up before the OS loads." },
+      { name: "Cache Memory", abbr: "CACHE", def: "High-speed memory located close to (or inside) the CPU that stores frequently used data/instructions to reduce access times. L1, L2, L3 are levels — L1 is fastest but smallest. Think: frequently visited websites in your browser cache." },
+      { name: "MAR", abbr: "MAR", def: "Memory Address Register — holds the address of the memory location to be read from or written to. The CPU 'dials' an address here before fetching data." },
+      { name: "MDR", abbr: "MDR", def: "Memory Data Register (also called MBR) — temporarily holds data being transferred to/from memory. It's the staging area for data in transit." },
+      { name: "Memory Hierarchy", abbr: "MH", def: "The pyramid of storage: Registers → Cache → RAM → Secondary Storage (HDD/SSD). As you go up: faster + smaller + more expensive. As you go down: slower + larger + cheaper." },
+    ]
+  },
+  execution: {
+    label: "Execution & Processing Concepts",
+    color: "#43e97b",
+    cat: "cat-execution",
+    items: [
+      { name: "Fetch-Decode-Execute Cycle", abbr: "FDE", def: "The fundamental instruction cycle: Fetch instruction from memory → Decode it (what does it mean?) → Execute it (do the thing). Every single instruction your CPU runs goes through this." },
+      { name: "Pipelining", abbr: "PIPE", def: "Overlapping the FDE stages of multiple instructions simultaneously — like an assembly line. While one instruction is being executed, the next is being decoded, and the one after is being fetched. More throughput, same clock speed." },
+      { name: "ISA", abbr: "ISA", def: "Instruction Set Architecture — the agreed interface between hardware and software. Defines what instructions the CPU understands. x86 (CISC) and ARM (RISC) are famous ISAs." },
+      { name: "CISC", abbr: "CISC", def: "Complex Instruction Set Computer — architecture with many complex instructions, each can do a lot in one go. Example: x86. Fewer lines of assembly code, but hardware is more complex." },
+      { name: "RISC", abbr: "RISC", def: "Reduced Instruction Set Computer — fewer, simpler instructions that each execute in one clock cycle. Example: ARM (used in your phone). Simpler hardware, compiler does more work." },
+      { name: "Out-of-Order Execution", abbr: "OOE", def: "The CPU reorders instructions dynamically to keep itself busy and avoid waiting. Results are still committed in the correct order. Your CPU is smarter than you think." },
+      { name: "Clock Cycle", abbr: "CC", def: "The basic unit of CPU time. One tick of the clock. CPI (Cycles Per Instruction) tells you how many cycles an instruction takes on average." },
+    ]
+  },
+  system: {
+    label: "System Architecture & Organisation",
+    color: "#ffd166",
+    cat: "cat-system",
+    items: [
+      { name: "Von Neumann Architecture", abbr: "VNA", def: "The classic design: instructions and data share the same memory and the same bus. Simple, but creates the 'Von Neumann bottleneck' — the bus becomes a traffic jam." },
+      { name: "Harvard Architecture", abbr: "HA", def: "Separate memories AND separate buses for instructions and data. Faster because both can be accessed simultaneously. Used in microcontrollers and DSPs." },
+      { name: "Multicore", abbr: "MC", def: "Multiple independent CPU cores on one chip. Each core can execute its own thread in parallel. Dual-core, quad-core, octa-core — you've seen these on phone specs." },
+      { name: "I/O", abbr: "I/O", def: "Input/Output — mechanisms for the CPU to communicate with the outside world (keyboard, screen, disk, network). Managed via controllers, channels, and interrupts." },
+      { name: "Bandwidth", abbr: "BW", def: "The amount of data that can be transferred per unit of time (e.g., GB/s). Higher bandwidth = faster data movement between CPU, memory, and devices." },
+      { name: "Interrupt", abbr: "INT", def: "A signal sent to the CPU to pause current execution and handle an urgent event (e.g., keystroke, timer). After handling it (the ISR), the CPU resumes what it was doing." },
+      { name: "DMA", abbr: "DMA", def: "Direct Memory Access — lets peripherals transfer data directly to/from memory WITHOUT involving the CPU for every byte. Frees up the CPU for other tasks." },
+    ]
+  }
+};
+
+let currentCat = 'all';
+let quizMode = false;
+
+function buildTerms() {
+  const container = document.getElementById('terms-container');
+  container.innerHTML = '';
+  
+  let totalCount = 0;
+
+  for (const [catKey, catData] of Object.entries(terms)) {
+    const section = document.createElement('div');
+    section.className = `category ${catData.cat}`;
+    section.dataset.cat = catKey;
+
+    section.innerHTML = `
+      <div class="category-header">
+        <div class="category-dot"></div>
+        <span class="category-label">${catData.label}</span>
+      </div>
+      <div class="terms-grid" id="grid-${catKey}"></div>
+    `;
+
+    container.appendChild(section);
+    const grid = document.getElementById(`grid-${catKey}`);
+
+    for (const term of catData.items) {
+      totalCount++;
+      const card = document.createElement('div');
+      card.className = 'term-card';
+      card.dataset.name = term.name.toLowerCase();
+      card.dataset.def = term.def.toLowerCase();
+      card.dataset.cat = catKey;
+      card.innerHTML = `
+        <div class="term-name">
+          ${term.name}
+          ${term.abbr !== term.name ? `<span class="term-abbr">${term.abbr}</span>` : ''}
+        </div>
+        <div class="term-def">${term.def}</div>
+      `;
+      card.addEventListener('click', () => {
+        if (quizMode) card.classList.toggle('revealed');
+      });
+      grid.appendChild(card);
+    }
+  }
+
+  document.getElementById('total-count').textContent = totalCount;
+  updateVisibleCount();
+}
+
+function filterCat(cat, btn) {
+  currentCat = cat;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  filterTerms();
+}
+
+function filterTerms() {
+  const query = document.getElementById('search').value.toLowerCase().trim();
+  let visible = 0;
+
+  document.querySelectorAll('.category').forEach(section => {
+    const catKey = section.dataset.cat;
+    const catVisible = currentCat === 'all' || currentCat === catKey;
+    let sectionHasVisible = false;
+
+    section.querySelectorAll('.term-card').forEach(card => {
+      const nameMatch = card.dataset.name.includes(query);
+      const defMatch = card.dataset.def.includes(query);
+      const show = catVisible && (nameMatch || defMatch);
+      card.classList.toggle('hidden', !show);
+      if (show) { visible++; sectionHasVisible = true; }
+    });
+
+    section.classList.toggle('hidden', !sectionHasVisible);
+  });
+
+  document.getElementById('visible-count').textContent = visible;
+  document.getElementById('empty-state').style.display = visible === 0 ? 'block' : 'none';
+}
+
+function updateVisibleCount() {
+  const visible = document.querySelectorAll('.term-card:not(.hidden)').length;
+  document.getElementById('visible-count').textContent = visible;
+}
+
+function toggleQuiz() {
+  quizMode = !quizMode;
+  const container = document.getElementById('terms-container');
+  const hint = document.getElementById('reveal-hint');
+  const btn = document.getElementById('quiz-btn');
+  const modeLabel = document.getElementById('mode-label');
+
+  if (quizMode) {
+    container.classList.add('quiz-mode');
+    document.querySelectorAll('.term-card').forEach(c => c.classList.remove('revealed'));
+    hint.style.display = 'block';
+    btn.textContent = '📖 Browse Mode';
+    modeLabel.textContent = 'Quiz';
+  } else {
+    container.classList.remove('quiz-mode');
+    hint.style.display = 'none';
+    btn.textContent = '🧠 Quiz Mode';
+    modeLabel.textContent = 'Browse';
+  }
+}
+
+buildTerms();
+</script>
+</body>
+</html>

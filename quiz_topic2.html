@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CSC 2111 – Topic 2: Computer Evolution & Performance</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;700&family=Clash+Display:wght@400;600;700&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f5f0e8;
+    --surface: #ece7de;
+    --card: #fff;
+    --accent: #c0392b;
+    --accent2: #2c3e50;
+    --accent3: #e67e22;
+    --text: #1a1a1a;
+    --muted: #666;
+    --border: #d5cfc4;
+    --green: #27ae60;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Outfit', sans-serif;
+    min-height: 100vh;
+  }
+
+  /* Vintage paper texture overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4'%3E%3Crect width='4' height='4' fill='%23f5f0e8'/%3E%3Ccircle cx='1' cy='1' r='0.5' fill='%23e8e2d9' opacity='0.5'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container { max-width: 920px; margin: 0 auto; padding: 2rem; position: relative; z-index: 1; }
+
+  /* HEADER */
+  header {
+    border-bottom: 3px solid var(--accent2);
+    padding: 2.5rem 0 1.5rem;
+    margin-bottom: 2rem;
+    animation: slideIn 0.7s ease both;
+  }
+
+  .course-tag {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--accent);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 0.8rem;
+    display: block;
+  }
+
+  h1 {
+    font-family: 'Outfit', sans-serif;
+    font-size: clamp(2rem, 5vw, 3.2rem);
+    font-weight: 700;
+    line-height: 1.1;
+    color: var(--accent2);
+    margin-bottom: 0.5rem;
+  }
+
+  h1 span { color: var(--accent); }
+
+  header p {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.8rem;
+    color: var(--muted);
+  }
+
+  /* TIMELINE */
+  .timeline {
+    position: relative;
+    padding: 1rem 0;
+    margin: 2rem 0;
+  }
+
+  .timeline::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: linear-gradient(to bottom, var(--accent), var(--accent3), var(--green));
+    transform: translateX(-50%);
+  }
+
+  .era {
+    display: flex;
+    gap: 2rem;
+    align-items: flex-start;
+    margin-bottom: 2.5rem;
+    animation: fadeIn 0.6s ease both;
+  }
+
+  .era:nth-child(odd) { flex-direction: row; }
+  .era:nth-child(even) { flex-direction: row-reverse; }
+
+  .era-card {
+    flex: 1;
+    background: var(--card);
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 4px 4px 0 var(--border);
+    transition: all 0.2s;
+    cursor: pointer;
+    position: relative;
+  }
+
+  .era-card:hover {
+    transform: translate(-3px, -3px);
+    box-shadow: 7px 7px 0 var(--border);
+  }
+
+  .era-card.gen1 { border-color: #c0392b; }
+  .era-card.gen2 { border-color: #8e44ad; }
+  .era-card.gen3 { border-color: #2980b9; }
+  .era-card.gen4 { border-color: #27ae60; }
+  .era-card.gen5 { border-color: #e67e22; }
+
+  .era-dot {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    margin-top: 1.5rem;
+    position: relative;
+    z-index: 2;
+    border: 3px solid var(--bg);
+    box-shadow: 0 0 0 2px var(--accent2);
+  }
+
+  .era-dot.gen1 { background: #c0392b; }
+  .era-dot.gen2 { background: #8e44ad; }
+  .era-dot.gen3 { background: #2980b9; }
+  .era-dot.gen4 { background: #27ae60; }
+  .era-dot.gen5 { background: #e67e22; }
+
+  .era-spacer { flex: 1; }
+
+  .era-year {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--muted);
+    margin-bottom: 0.4rem;
+  }
+
+  .era-title {
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: var(--accent2);
+    margin-bottom: 0.4rem;
+  }
+
+  .era-tech {
+    display: inline-block;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.7rem;
+    padding: 2px 8px;
+    margin: 2px 2px 6px;
+    color: var(--muted);
+  }
+
+  .era-desc {
+    font-size: 0.88rem;
+    color: var(--muted);
+    line-height: 1.7;
+    display: none;
+    margin-top: 0.7rem;
+    border-top: 1px dashed var(--border);
+    padding-top: 0.7rem;
+  }
+
+  .era-desc.open { display: block; animation: fadeIn 0.3s ease; }
+
+  .expand-hint {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--accent);
+    margin-top: 0.5rem;
+  }
+
+  /* BRAIN TEASER */
+  .brain-teaser {
+    background: var(--accent2);
+    color: #fff;
+    border-radius: 16px;
+    padding: 2rem;
+    margin: 2rem 0;
+    animation: slideIn 0.7s 0.2s ease both;
+  }
+
+  .brain-teaser h2 {
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .brain-teaser p { font-size: 0.95rem; line-height: 1.7; opacity: 0.9; margin-bottom: 1rem; }
+
+  /* SECTIONS */
+  .section { margin: 2.5rem 0; animation: fadeIn 0.6s ease both; }
+
+  .section-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 0.5rem;
+  }
+
+  .section h2 {
+    font-size: 1.7rem;
+    font-weight: 700;
+    color: var(--accent2);
+    margin-bottom: 1rem;
+    border-bottom: 2px solid var(--border);
+    padding-bottom: 0.5rem;
+  }
+
+  /* IAS MACHINE */
+  .ias-diagram {
+    background: var(--card);
+    border: 2px solid var(--accent2);
+    border-radius: 12px;
+    padding: 2rem;
+    margin: 1.5rem 0;
+    box-shadow: 5px 5px 0 #d5cfc4;
+  }
+
+  .ias-diagram h3 {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.85rem;
+    color: var(--muted);
+    margin-bottom: 1.5rem;
+    text-align: center;
+    letter-spacing: 1px;
+  }
+
+  .ias-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  .ias-box {
+    padding: 1rem;
+    border-radius: 8px;
+    text-align: center;
+    border: 2px solid;
+  }
+
+  .ias-box.cpu-box { border-color: var(--accent); background: #fdf5f4; grid-column: 1 / -1; }
+  .ias-box.mem-box { border-color: #2980b9; background: #f0f6fb; }
+  .ias-box.io-box { border-color: var(--green); background: #f0faf4; }
+
+  .ias-box .b-label { font-family: 'IBM Plex Mono', monospace; font-size: 0.65rem; color: var(--muted); margin-bottom: 3px; }
+  .ias-box .b-name { font-weight: 700; font-size: 0.95rem; }
+  .ias-box.cpu-box .b-name { color: var(--accent); }
+  .ias-box.mem-box .b-name { color: #2980b9; }
+  .ias-box.io-box .b-name { color: var(--green); }
+
+  .ias-box small { display: block; font-size: 0.75rem; color: var(--muted); margin-top: 4px; }
+
+  .ias-arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    margin: 0.5rem 0;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--muted);
+  }
+
+  .ias-arrow::before, .ias-arrow::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+  /* PERFORMANCE SECTION */
+  .perf-formula {
+    background: var(--accent2);
+    color: #fff;
+    border-radius: 12px;
+    padding: 2rem;
+    text-align: center;
+    margin: 1.5rem 0;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  .perf-formula .formula {
+    font-size: clamp(1rem, 3vw, 1.4rem);
+    font-weight: 700;
+    margin: 1rem 0;
+    background: rgba(255,255,255,0.1);
+    border-radius: 8px;
+    padding: 1rem;
+    border: 1px solid rgba(255,255,255,0.2);
+  }
+
+  .perf-formula .legend { font-size: 0.8rem; opacity: 0.8; line-height: 2; }
+
+  /* INFO CARDS */
+  .info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1rem;
+    margin: 1rem 0;
+  }
+
+  .info-card {
+    background: var(--card);
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    padding: 1.3rem;
+    box-shadow: 3px 3px 0 var(--border);
+  }
+
+  .info-card h4 { font-size: 1rem; font-weight: 700; color: var(--accent2); margin-bottom: 0.5rem; }
+  .info-card p { font-size: 0.875rem; color: var(--muted); line-height: 1.7; }
+  .info-card .icon { font-size: 1.8rem; margin-bottom: 0.5rem; }
+
+  /* QUIZ */
+  .quiz-section {
+    background: var(--card);
+    border: 2px solid var(--accent);
+    border-radius: 16px;
+    padding: 2rem;
+    margin: 2rem 0;
+    box-shadow: 5px 5px 0 #d5cfc4;
+  }
+
+  .quiz-section h2 {
+    color: var(--accent);
+    font-size: 1.3rem;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .q-block { margin-bottom: 1.5rem; }
+
+  .q-block p {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 0.8rem;
+    line-height: 1.6;
+  }
+
+  .opts { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; }
+
+  .opt {
+    background: var(--surface);
+    border: 2px solid var(--border);
+    color: var(--text);
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.875rem;
+    padding: 0.7rem 1rem;
+    border-radius: 8px;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.2s;
+  }
+
+  .opt:hover { border-color: var(--accent2); background: #fff; transform: translateY(-2px); }
+  .opt.correct { background: #eafaf1; border-color: var(--green); color: var(--green); font-weight: 700; }
+  .opt.wrong { background: #fdf5f4; border-color: var(--accent); color: var(--accent); }
+  .opt:disabled { cursor: default; transform: none; }
+
+  .q-feedback {
+    display: none;
+    background: var(--surface);
+    border-left: 4px solid var(--green);
+    border-radius: 0 8px 8px 0;
+    padding: 0.9rem 1.2rem;
+    margin-top: 0.7rem;
+    font-size: 0.875rem;
+    line-height: 1.7;
+    color: var(--text);
+  }
+
+  .q-feedback.show { display: block; animation: fadeIn 0.3s ease; }
+  .q-feedback strong { color: var(--accent2); }
+
+  /* MOORE'S LAW VISUAL */
+  .moore-visual {
+    background: var(--card);
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin: 1.5rem 0;
+    box-shadow: 3px 3px 0 var(--border);
+    overflow-x: auto;
+  }
+
+  .moore-visual h3 {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin-bottom: 1rem;
+    letter-spacing: 1px;
+  }
+
+  .bar-chart { display: flex; flex-direction: column; gap: 0.6rem; min-width: 400px; }
+
+  .bar-row { display: flex; align-items: center; gap: 1rem; }
+  .bar-name { font-family: 'IBM Plex Mono', monospace; font-size: 0.7rem; color: var(--muted); width: 80px; text-align: right; flex-shrink: 0; }
+  .bar-track { flex: 1; height: 22px; background: var(--surface); border-radius: 4px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 4px; display: flex; align-items: center; padding-left: 8px; font-family: 'IBM Plex Mono', monospace; font-size: 0.65rem; color: #fff; font-weight: 700; transition: width 1s ease; }
+  .bar-val { font-family: 'IBM Plex Mono', monospace; font-size: 0.7rem; color: var(--muted); flex-shrink: 0; }
+
+  /* SCORE */
+  .score-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--surface);
+    border-radius: 10px;
+    padding: 1rem 1.5rem;
+    margin: 2rem 0;
+    border: 1px solid var(--border);
+  }
+
+  .score-bar span { font-family: 'IBM Plex Mono', monospace; font-size: 0.85rem; color: var(--muted); }
+  .score-bar strong { color: var(--accent2); font-size: 1.1rem; }
+
+  .next-btn {
+    background: var(--accent2);
+    color: #fff;
+    font-family: 'Outfit', sans-serif;
+    font-weight: 700;
+    font-size: 1rem;
+    padding: 0.9rem 2.2rem;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 3px 3px 0 #1a252f;
+  }
+
+  .next-btn:hover { transform: translate(-2px, -2px); box-shadow: 5px 5px 0 #1a252f; }
+
+  .analogy-box {
+    background: #fffbf0;
+    border: 2px solid var(--accent3);
+    border-radius: 10px;
+    padding: 1.3rem 1.5rem;
+    margin: 1rem 0;
+    font-size: 0.9rem;
+    line-height: 1.8;
+    color: var(--text);
+  }
+
+  .analogy-box strong { color: var(--accent3); }
+
+  .tip-box {
+    background: #f0faf4;
+    border: 2px solid var(--green);
+    border-radius: 10px;
+    padding: 1.2rem 1.5rem;
+    margin: 1rem 0;
+    font-size: 0.9rem;
+    line-height: 1.8;
+  }
+
+  .tip-box strong { color: var(--green); }
+
+  /* EXAM ALERT */
+  .exam-alert {
+    background: #fdf5f4;
+    border: 2px dashed var(--accent);
+    border-radius: 10px;
+    padding: 1.2rem 1.5rem;
+    margin: 1rem 0;
+    font-size: 0.9rem;
+    line-height: 1.8;
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+
+  .exam-alert .icon { font-size: 1.5rem; flex-shrink: 0; }
+  .exam-alert strong { color: var(--accent); }
+
+  @keyframes slideIn { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+  hr { border: none; border-top: 2px dashed var(--border); margin: 2.5rem 0; }
+</style>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <h2>Architecture Hub</h2>
+            <span class="course-code">CSC 2111</span>
+        </div>
+        
+        <nav class="nav-menu">
+            <div class="nav-group-title">Overview</div>
+            <ul>
+                <li class="nav-item"><a href="index.html" class="nav-link"><span class="nav-icon">🏠</span> Dashboard</a></li>
+                <li class="nav-item"><a href="terminology.html" class="nav-link"><span class="nav-icon">📖</span> Terminology</a></li>
+            </ul>
+
+            <div class="nav-group-title">Topics</div>
+            <ul>
+                <li class="nav-item"><a href="topic1.html" class="nav-link"><span class="nav-icon">01</span> Structure & Function</a></li>
+                <li class="nav-item"><a href="topic2.html" class="nav-link"><span class="nav-icon">02</span> Evolution</a></li>
+            </ul>
+
+            <div class="nav-group-title">Assessments</div>
+            <ul>
+                <li class="nav-item"><a href="quiz_topic1.html" class="nav-link"><span class="nav-icon">🧠</span> Topic 1 Quiz</a></li>
+                <li class="nav-item"><a href="quiz_topic2.html" class="nav-link"><span class="nav-icon">🧠</span> Topic 2 Quiz</a></li>
+            </ul>
+        </nav>
+    </aside>
+
+<main class="main-content" style="background: var(--bg); color: var(--text); padding-top: 1rem;">
+
+        <div class="container" style="padding-top: 1rem;">
+            <header>
+                <div class="course-tag" style="display:inline-block; font-family:'IBM Plex Mono'; color:var(--accent); font-size:0.75rem; letter-spacing:3px; text-transform:uppercase; margin-bottom:0.8rem;">CSC 2111 · ASSESSMENT</div>
+                <h1>Topic 2 <span>Knowledge Check</span></h1>
+                <p style="font-family:'IBM Plex Mono'; color:var(--muted); font-size:0.8rem; margin-top:0.5rem;">// verify your understanding of Moore's law and CPI</p>
+            </header>
+            <div class="quiz-section">
+    <h2>🔥 Challenge Quiz</h2>
+
+    <div class="q-block">
+      <p>Q1. The von Neumann architecture's most revolutionary idea was:</p>
+      <div class="opts">
+        <button class="opt" onclick="doQuiz(this,'a1',false)">A) Using transistors instead of tubes</button>
+        <button class="opt" onclick="doQuiz(this,'a1',true)">B) Storing programs in memory just like data</button>
+        <button class="opt" onclick="doQuiz(this,'a1',false)">C) Connecting multiple computers together</button>
+        <button class="opt" onclick="doQuiz(this,'a1',false)">D) Inventing the first programming language</button>
+      </div>
+      <div class="q-feedback" id="a1-fb">
+        <strong>✅ Stored-program concept!</strong> Before von Neumann, you'd rewire the hardware to change what the computer did. He said — put the program IN memory. One machine, infinite programs. Every computer you've ever used runs on this idea.
+      </div>
+    </div>
+
+    <div class="q-block">
+      <p>Q2. Moore's Law states that transistor count doubles roughly every:</p>
+      <div class="opts">
+        <button class="opt" onclick="doQuiz(this,'a2',false)">A) 6 months</button>
+        <button class="opt" onclick="doQuiz(this,'a2',true)">B) 2 years</button>
+        <button class="opt" onclick="doQuiz(this,'a2',false)">C) 10 years</button>
+        <button class="opt" onclick="doQuiz(this,'a2',false)">D) 5 years</button>
+      </div>
+      <div class="q-feedback" id="a2-fb">
+        <strong>✅ ~2 years!</strong> Gordon Moore made this observation in 1965. It's held remarkably well, though the pace has been slowing as we approach physical limits of silicon.
+      </div>
+    </div>
+
+    <div class="q-block">
+      <p>Q3. A program has 1,000,000 instructions and runs on a 2 GHz processor with average CPI of 2. What's the execution time?</p>
+      <div class="opts">
+        <button class="opt" onclick="doQuiz(this,'a3',false)">A) 0.0005 seconds</button>
+        <button class="opt" onclick="doQuiz(this,'a3',true)">B) 0.001 seconds (1 ms)</button>
+        <button class="opt" onclick="doQuiz(this,'a3',false)">C) 1 second</button>
+        <button class="opt" onclick="doQuiz(this,'a3',false)">D) 2 seconds</button>
+      </div>
+      <div class="q-feedback" id="a3-fb">
+        <strong>✅ 0.001 seconds!</strong> T = Ic × CPI × τ = 1,000,000 × 2 × (1/2,000,000,000) = 2,000,000 / 2,000,000,000 = <strong>0.001s</strong>. Get comfortable with this calculation — the exam WILL test you on it.
+      </div>
+    </div>
+
+    <div class="q-block">
+      <p>Q4. The Abacus belongs to which era in computing history?</p>
+      <div class="opts">
+        <button class="opt" onclick="doQuiz(this,'a4',false)">A) Electronic</button>
+        <button class="opt" onclick="doQuiz(this,'a4',false)">B) Mechanical</button>
+        <button class="opt" onclick="doQuiz(this,'a4',true)">C) Pre-mechanical</button>
+        <button class="opt" onclick="doQuiz(this,'a4',false)">D) First generation</button>
+      </div>
+      <div class="q-feedback" id="a4-fb">
+        <strong>✅ Pre-mechanical!</strong> The abacus uses beads to represent numbers — no gears, no electricity, just physical manipulation. This directly answers Q2 in your 2018 exam paper! Pre-mechanical = manual tools (abacus, Napier's bones, finger-counting). Mechanical = gears (Pascaline, Schickard's calculator). Electronic = electricity.
+      </div>
+    </div>
+
+  </div>
+
+  
+            <div id="score-bar" class="score-bar" style="display:none; justify-content:space-between; align-items:center; background:var(--surface); border-radius:10px; padding:1rem 1.5rem; margin:2rem 0; border:1px solid var(--border);">
+                <span style="font-family:'IBM Plex Mono'; font-size:0.85rem; color:var(--muted);">Assessment Complete ✅</span>
+                <strong id="scoreDisplay" style="color:var(--accent2); font-size:1.1rem;">Score: 0 / 4</strong>
+                <button class="next-btn" style="background:var(--accent2); color:#fff; font-family:'Outfit'; font-weight:700; font-size:1rem; padding:0.9rem 2.2rem; border:none; border-radius:8px; cursor:pointer; box-shadow:3px 3px 0 #1a252f;" onclick="window.location.href='index.html'">Finish</button>
+            </div>
+        </div>
+
+<script>
+  const TOTAL = 4;
+  let answered = {};
+  let score = 0;
+
+  function doQuiz(btn, qId, isCorrect) {
+    if (answered[qId]) return; // already answered
+    answered[qId] = true;
+
+    // Disable all buttons in this question
+    const allBtns = btn.closest('.opts').querySelectorAll('.opt');
+    allBtns.forEach(b => b.disabled = true);
+
+    if (isCorrect) {
+      btn.classList.add('correct');
+      score++;
+    } else {
+      btn.classList.add('wrong');
+      // Highlight the correct answer
+      allBtns.forEach(b => {
+        if (b.getAttribute('onclick') && b.getAttribute('onclick').includes('true')) {
+          b.classList.add('correct');
+        }
+      });
+    }
+
+    // Show feedback
+    const fb = document.getElementById(qId + '-fb');
+    if (fb) fb.classList.add('show');
+
+    // If all questions answered, reveal score bar
+    if (Object.keys(answered).length === TOTAL) {
+      const bar = document.getElementById('score-bar');
+      bar.style.display = 'flex';
+      document.getElementById('scoreDisplay').textContent = 'Score: ' + score + ' / ' + TOTAL;
+      bar.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }
+</script>
+        
+</main>
+</body>
+</html>

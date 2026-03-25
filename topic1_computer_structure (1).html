@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CSC 2111 – Topic 1: Computer Structure & Function</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #13131a;
+    --card: #1a1a26;
+    --accent: #00f5c4;
+    --accent2: #ff6b35;
+    --accent3: #a855f7;
+    --text: #e8e8f0;
+    --muted: #888899;
+    --border: #2a2a3a;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Animated grid background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,245,196,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,245,196,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container { max-width: 900px; margin: 0 auto; padding: 2rem; position: relative; z-index: 1; }
+
+  /* HEADER */
+  header {
+    text-align: center;
+    padding: 3rem 0 2rem;
+    animation: fadeDown 0.8s ease both;
+  }
+
+  .course-tag {
+    display: inline-block;
+    background: rgba(0,245,196,0.1);
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    font-family: 'Space Mono', monospace;
+    font-size: 0.75rem;
+    padding: 4px 14px;
+    border-radius: 20px;
+    letter-spacing: 2px;
+    margin-bottom: 1rem;
+  }
+
+  h1 {
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    font-weight: 800;
+    line-height: 1.1;
+    background: linear-gradient(135deg, #fff 0%, var(--accent) 60%, var(--accent3) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 0.5rem;
+  }
+
+  header p {
+    color: var(--muted);
+    font-size: 1rem;
+    font-family: 'Space Mono', monospace;
+  }
+
+  /* BRAIN TEASER SECTION */
+  .brain-teaser {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--accent2);
+    border-radius: 16px;
+    padding: 2rem;
+    margin: 2rem 0;
+    animation: fadeUp 0.8s 0.2s ease both;
+  }
+
+  .brain-teaser h2 {
+    font-size: 1.3rem;
+    color: var(--accent2);
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .question-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin: 1rem 0;
+  }
+
+  .question-box p {
+    font-size: 1.1rem;
+    line-height: 1.7;
+    margin-bottom: 1.2rem;
+    color: var(--text);
+  }
+
+  .options-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.8rem;
+  }
+
+  .option-btn {
+    background: var(--card);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    font-size: 0.95rem;
+    padding: 0.9rem 1.2rem;
+    border-radius: 10px;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.2s;
+  }
+
+  .option-btn:hover { border-color: var(--accent); color: var(--accent); transform: translateX(4px); }
+  .option-btn.correct { background: rgba(0,245,196,0.15); border-color: var(--accent); color: var(--accent); }
+  .option-btn.wrong { background: rgba(255,107,53,0.15); border-color: var(--accent2); color: var(--accent2); }
+  .option-btn:disabled { cursor: default; transform: none; }
+
+  .feedback {
+    display: none;
+    margin-top: 1rem;
+    padding: 1.2rem;
+    background: rgba(0,245,196,0.08);
+    border: 1px solid rgba(0,245,196,0.2);
+    border-radius: 10px;
+    font-size: 0.95rem;
+    line-height: 1.7;
+    color: var(--text);
+  }
+
+  .feedback.show { display: block; animation: fadeUp 0.4s ease both; }
+  .feedback strong { color: var(--accent); }
+
+  /* PROGRESS BAR */
+  .progress-wrap {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin: 0.5rem 0 2rem;
+    animation: fadeUp 0.8s 0.3s ease both;
+  }
+
+  .progress-bar-track {
+    flex: 1;
+    height: 6px;
+    background: var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent3));
+    border-radius: 10px;
+    transition: width 0.5s ease;
+    width: 0%;
+  }
+
+  .progress-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  /* SECTIONS */
+  .section {
+    margin: 2rem 0;
+    animation: fadeUp 0.8s ease both;
+  }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 1.5rem;
+  }
+
+  .section-num {
+    width: 42px;
+    height: 42px;
+    background: linear-gradient(135deg, var(--accent), var(--accent3));
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+    font-size: 1rem;
+    color: #000;
+    flex-shrink: 0;
+  }
+
+  .section h2 {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--text);
+  }
+
+  /* ANALOGY CARD */
+  .analogy-card {
+    background: linear-gradient(135deg, rgba(168,85,247,0.1), rgba(0,245,196,0.05));
+    border: 1px solid rgba(168,85,247,0.3);
+    border-radius: 16px;
+    padding: 1.8rem;
+    margin: 1rem 0;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .analogy-card::before {
+    content: '💡';
+    position: absolute;
+    top: -10px;
+    right: 20px;
+    font-size: 3rem;
+    opacity: 0.2;
+  }
+
+  .analogy-card h3 {
+    color: var(--accent3);
+    font-size: 0.85rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 0.7rem;
+    font-family: 'Space Mono', monospace;
+  }
+
+  .analogy-card p {
+    color: var(--text);
+    line-height: 1.8;
+    font-size: 0.95rem;
+  }
+
+  /* DIAGRAM */
+  .diagram-container {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 2rem;
+    margin: 1.5rem 0;
+    overflow-x: auto;
+  }
+
+  .diagram-container h3 {
+    font-size: 1rem;
+    color: var(--muted);
+    font-family: 'Space Mono', monospace;
+    margin-bottom: 1.5rem;
+    text-align: center;
+    letter-spacing: 1px;
+  }
+
+  /* CPU diagram */
+  .cpu-diagram {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+    min-width: 500px;
+  }
+
+  .cpu-box {
+    background: linear-gradient(135deg, rgba(0,245,196,0.15), rgba(0,245,196,0.05));
+    border: 2px solid var(--accent);
+    border-radius: 12px;
+    padding: 1rem 2rem;
+    text-align: center;
+    min-width: 200px;
+    position: relative;
+  }
+
+  .cpu-box.memory { border-color: var(--accent3); background: linear-gradient(135deg, rgba(168,85,247,0.15), rgba(168,85,247,0.05)); }
+  .cpu-box.io { border-color: var(--accent2); background: linear-gradient(135deg, rgba(255,107,53,0.15), rgba(255,107,53,0.05)); }
+  .cpu-box.system { border-color: #facc15; background: linear-gradient(135deg, rgba(250,204,21,0.15), rgba(250,204,21,0.05)); width: 90%; }
+
+  .cpu-box .label { font-size: 0.75rem; font-family: 'Space Mono', monospace; opacity: 0.7; margin-bottom: 3px; }
+  .cpu-box .name { font-weight: 800; font-size: 1rem; }
+  .cpu-box.cpu-main { color: var(--accent); }
+  .cpu-box.memory { color: var(--accent3); }
+  .cpu-box.io { color: var(--accent2); }
+  .cpu-box.system { color: #facc15; }
+
+  .row-boxes {
+    display: flex;
+    gap: 1.5rem;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .arrow-down {
+    width: 2px;
+    height: 30px;
+    background: var(--border);
+    margin: 0 auto;
+    position: relative;
+  }
+
+  .arrow-down::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: -5px;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-top: 8px solid var(--border);
+  }
+
+  .bus-line {
+    width: 80%;
+    height: 14px;
+    background: linear-gradient(90deg, transparent, rgba(250,204,21,0.3), transparent);
+    border: 1px solid rgba(250,204,21,0.4);
+    border-radius: 7px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.6rem;
+    font-family: 'Space Mono', monospace;
+    color: #facc15;
+    letter-spacing: 2px;
+    margin: 0.5rem 0;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .bus-line::before {
+    content: '';
+    position: absolute;
+    left: -100%;
+    width: 40%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(250,204,21,0.5), transparent);
+    animation: busFlow 2s linear infinite;
+  }
+
+  @keyframes busFlow {
+    from { left: -40%; }
+    to { left: 140%; }
+  }
+
+  /* CONCEPT CARDS */
+  .concept-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin: 1rem 0;
+  }
+
+  .concept-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.3rem;
+    transition: all 0.3s;
+    cursor: default;
+  }
+
+  .concept-card:hover {
+    border-color: var(--accent);
+    transform: translateY(-4px);
+    box-shadow: 0 8px 30px rgba(0,245,196,0.1);
+  }
+
+  .concept-icon { font-size: 2rem; margin-bottom: 0.7rem; }
+  .concept-card h4 { font-size: 1rem; font-weight: 700; margin-bottom: 0.5rem; color: var(--accent); }
+  .concept-card p { font-size: 0.85rem; color: var(--muted); line-height: 1.6; }
+
+  /* INFO BOX */
+  .info-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin: 1rem 0;
+  }
+
+  .info-box p, .info-box li {
+    color: var(--text);
+    line-height: 1.9;
+    font-size: 0.95rem;
+  }
+
+  .info-box ul { padding-left: 1.5rem; }
+  .info-box li { margin-bottom: 0.5rem; }
+  .info-box strong { color: var(--accent); }
+
+  /* CHALLENGE SECTION */
+  .challenge-section {
+    background: linear-gradient(135deg, rgba(255,107,53,0.08), rgba(255,107,53,0.02));
+    border: 1px solid rgba(255,107,53,0.3);
+    border-radius: 16px;
+    padding: 2rem;
+    margin: 2rem 0;
+  }
+
+  .challenge-section h2 {
+    color: var(--accent2);
+    margin-bottom: 1.5rem;
+    font-size: 1.3rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  /* SCORE */
+  .score-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 6px 16px;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.85rem;
+    color: var(--accent);
+    margin-left: auto;
+  }
+
+  .nav-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem 0;
+    border-top: 1px solid var(--border);
+    margin-top: 3rem;
+    animation: fadeUp 0.8s 0.5s ease both;
+  }
+
+  .next-btn {
+    background: linear-gradient(135deg, var(--accent), var(--accent3));
+    color: #000;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 1rem;
+    padding: 0.9rem 2rem;
+    border: none;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: all 0.3s;
+    letter-spacing: 0.5px;
+  }
+
+  .next-btn:hover { transform: scale(1.05); box-shadow: 0 8px 30px rgba(0,245,196,0.3); }
+
+  @keyframes fadeDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+  .highlight { color: var(--accent); font-weight: 700; }
+  .highlight2 { color: var(--accent2); font-weight: 700; }
+  .highlight3 { color: var(--accent3); font-weight: 700; }
+
+  .tag {
+    display: inline-block;
+    background: rgba(0,245,196,0.1);
+    color: var(--accent);
+    font-family: 'Space Mono', monospace;
+    font-size: 0.75rem;
+    padding: 2px 10px;
+    border-radius: 6px;
+    border: 1px solid rgba(0,245,196,0.3);
+    margin: 2px;
+  }
+
+  .separator { border: none; border-top: 1px solid var(--border); margin: 2rem 0; }
+
+  /* Function view toggle */
+  .toggle-group { display: flex; gap: 0.5rem; flex-wrap: wrap; margin: 1rem 0; }
+
+  .toggle-btn {
+    background: var(--card);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-family: 'Syne', sans-serif;
+    font-size: 0.85rem;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .toggle-btn.active, .toggle-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(0,245,196,0.1);
+  }
+
+  .function-detail {
+    display: none;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.2rem;
+    margin-top: 0.5rem;
+    animation: fadeUp 0.3s ease both;
+  }
+
+  .function-detail.show { display: block; }
+  .function-detail h4 { color: var(--accent); margin-bottom: 0.5rem; }
+  .function-detail p { color: var(--text); font-size: 0.9rem; line-height: 1.7; }
+
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <header>
+    <div class="course-tag">CSC 2111 · TOPIC 01</div>
+    <h1>Computer Structure<br>& Function</h1>
+    <p>// interactive lesson · challenge your thinking</p>
+  </header>
+
+  <!-- BRAIN TEASER -->
+  <div class="brain-teaser">
+    <h2>🧠 Brain Teaser — Before We Begin</h2>
+    <p style="color:var(--muted); font-size:0.9rem; margin-bottom:1rem;">Answer this <em>before</em> reading anything. Don't overthink — use your gut!</p>
+
+    <div class="question-box">
+      <p>You open a browser and type <strong>"google.com"</strong>. In that one action, which parts of the computer are involved?</p>
+      <div class="options-grid">
+        <button class="option-btn" onclick="answer(this, false)">A) Only the CPU — it does all the work</button>
+        <button class="option-btn" onclick="answer(this, false)">B) CPU + Screen (output only needed)</button>
+        <button class="option-btn" onclick="answer(this, true)">C) CPU, Memory, I/O devices, and Storage all work together</button>
+        <button class="option-btn" onclick="answer(this, false)">D) The Internet handles it, the computer just displays</button>
+      </div>
+      <div class="feedback" id="feedback">
+        <strong>✅ Correct!</strong> Even a simple web request fires up the <strong>entire computer system</strong>:
+        <ul style="margin-top:0.7rem; padding-left:1.5rem; line-height:2;">
+          <li><strong>Input:</strong> Keyboard typed the URL</li>
+          <li><strong>CPU:</strong> Processed what you typed, ran the browser program</li>
+          <li><strong>Memory (RAM):</strong> Held the browser and webpage data temporarily</li>
+          <li><strong>Storage:</strong> Browser cache, bookmarks, history</li>
+          <li><strong>I/O (Network):</strong> Sent request out, received webpage back</li>
+          <li><strong>Output:</strong> Screen rendered the page</li>
+        </ul>
+        <br>This is exactly what this topic is about — understanding how all these pieces <em>connect and cooperate</em>. 🚀
+      </div>
+    </div>
+  </div>
+
+  <!-- PROGRESS -->
+  <div class="progress-wrap">
+    <span class="progress-label">LESSON PROGRESS</span>
+    <div class="progress-bar-track"><div class="progress-bar-fill" id="progress" style="width:15%"></div></div>
+    <span class="progress-label" id="pct">15%</span>
+  </div>
+
+  <!-- SECTION 1 -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-num">01</div>
+      <h2>What Is Computer Structure?</h2>
+    </div>
+
+    <div class="analogy-card">
+      <h3>🏙️ Real World Analogy</h3>
+      <p>Think of a computer like a <strong>city</strong>. The city has different districts (components) that each have a job — the <em>financial district</em> (CPU) makes decisions, the <em>warehouses</em> (Memory) store things temporarily, the <em>roads</em> (Buses) move stuff around, and the <em>ports/airports</em> (I/O) bring things in and out. <strong>Structure</strong> is the map of how all these districts are laid out and connected.</p>
+    </div>
+
+    <div class="info-box">
+      <p><strong>Structure</strong> refers to the way in which the components of a computer are <strong>interrelated</strong>. It's the physical and logical arrangement — the blueprint of the machine.</p>
+      <br>
+      <p>A computer has <strong>four main structural components</strong>:</p>
+      <ul style="margin-top:0.8rem;">
+        <li><strong>CPU (Central Processing Unit)</strong> — controls the operation of the computer and performs data processing</li>
+        <li><strong>Main Memory</strong> — stores data and programs <em>currently</em> being used</li>
+        <li><strong>I/O (Input/Output)</strong> — transfers data between the computer and the external environment</li>
+        <li><strong>System Interconnection</strong> — the mechanism(s) that provides communication among CPU, memory, and I/O (usually a bus)</li>
+      </ul>
+    </div>
+
+    <!-- DIAGRAM -->
+    <div class="diagram-container">
+      <h3>// TOP-LEVEL COMPUTER STRUCTURE</h3>
+      <div class="cpu-diagram">
+        <div class="row-boxes">
+          <div class="cpu-box cpu-main">
+            <div class="label">COMPONENT 01</div>
+            <div class="name">CPU</div>
+          </div>
+          <div class="cpu-box memory">
+            <div class="label">COMPONENT 02</div>
+            <div class="name">Main Memory</div>
+          </div>
+          <div class="cpu-box io">
+            <div class="label">COMPONENT 03</div>
+            <div class="name">I/O</div>
+          </div>
+        </div>
+        <div class="arrow-down" style="height:20px;"></div>
+        <div class="bus-line">SYSTEM BUS</div>
+        <div class="arrow-down" style="height:20px;"></div>
+        <div class="cpu-box system">
+          <div class="label">COMPONENT 04</div>
+          <div class="name">System Interconnection (Bus)</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="separator">
+
+  <!-- SECTION 2 -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-num">02</div>
+      <h2>What Is Computer Function?</h2>
+    </div>
+
+    <div class="analogy-card">
+      <h3>⚙️ Real World Analogy</h3>
+      <p>If <em>Structure</em> is the city map, then <strong>Function</strong> is what happens in the city day-to-day — the flow of traffic, transactions, the processes running. Function is about <em>what the computer does</em>, not just how it's built.</p>
+    </div>
+
+    <div class="info-box">
+      <p>All computers perform the same <strong>four basic functions</strong>. Click each to explore:</p>
+    </div>
+
+    <div class="toggle-group">
+      <button class="toggle-btn" onclick="showFunction('data-processing')">🔢 Data Processing</button>
+      <button class="toggle-btn" onclick="showFunction('data-storage')">💾 Data Storage</button>
+      <button class="toggle-btn" onclick="showFunction('data-movement')">↔️ Data Movement</button>
+      <button class="toggle-btn" onclick="showFunction('control')">🎛️ Control</button>
+    </div>
+
+    <div class="function-detail" id="fn-data-processing">
+      <h4>🔢 Data Processing</h4>
+      <p>The computer must be able to process data. The data may take a wide variety of forms, and the range of processing requirements is broad. You write code → CPU executes it. You add two numbers → CPU processes that. This is the core purpose of the CPU — it <strong>transforms data</strong>.</p>
+    </div>
+
+    <div class="function-detail" id="fn-data-storage">
+      <h4>💾 Data Storage</h4>
+      <p>There are <strong>two levels</strong> of storage. Short-term: even if there's no need to process data immediately, the data must still be stored in the computer (RAM holds it temporarily). Long-term: data files need to be stored even when the computer is off — that's your hard drive or SSD. Storage is the computer's <strong>memory and filing cabinet</strong>.</p>
+    </div>
+
+    <div class="function-detail" id="fn-data-movement">
+      <h4>↔️ Data Movement</h4>
+      <p>The computer must be able to move data between itself and the outside world. When data are received from or delivered to a device directly connected to the computer — this is called <strong>I/O</strong>. When data are moved over longer distances — this is called <strong>data communications</strong>. Think: typing on a keyboard, printing a document, browsing the internet.</p>
+    </div>
+
+    <div class="function-detail" id="fn-control">
+      <h4>🎛️ Control</h4>
+      <p>There must be control of the three previous functions. A special unit within the CPU — the <strong>Control Unit</strong> — manages and coordinates the resources and activities. It's like a <em>traffic controller</em> — directing when to read memory, when to write to disk, when to accept keyboard input. Without control, the computer would be chaos.</p>
+    </div>
+
+    <div class="concept-grid" style="margin-top:1.5rem;">
+      <div class="concept-card">
+        <div class="concept-icon">🔢</div>
+        <h4>Data Processing</h4>
+        <p>Transform raw data into useful information</p>
+      </div>
+      <div class="concept-card">
+        <div class="concept-icon">💾</div>
+        <h4>Data Storage</h4>
+        <p>Short-term (RAM) and long-term (disk) storage</p>
+      </div>
+      <div class="concept-card">
+        <div class="concept-icon">↔️</div>
+        <h4>Data Movement</h4>
+        <p>I/O and data communications</p>
+      </div>
+      <div class="concept-card">
+        <div class="concept-icon">🎛️</div>
+        <h4>Control</h4>
+        <p>Coordinate all operations</p>
+      </div>
+    </div>
+  </div>
+
+  <hr class="separator">
+
+  <!-- SECTION 3: STRUCTURE vs FUNCTION -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-num">03</div>
+      <h2>Structure vs Function — The Key Distinction</h2>
+    </div>
+
+    <div class="info-box">
+      <p>This is a <strong>crucial distinction</strong> that Stallings (your textbook author) emphasises heavily:</p>
+      <br>
+      <ul>
+        <li><strong>Structure</strong> = <em>How</em> components are connected (the static layout)</li>
+        <li><strong>Function</strong> = <em>What</em> each component does (the dynamic behaviour)</li>
+      </ul>
+      <br>
+      <p>Both are needed to fully understand a computer. You can't understand a car by only knowing where the parts are placed — you also need to know what each part <em>does</em>.</p>
+    </div>
+
+    <div class="analogy-card">
+      <h3>🧬 Think of it like the Human Body</h3>
+      <p>
+        <strong>Structure:</strong> Heart, lungs, brain, arteries — their positions and connections.<br><br>
+        <strong>Function:</strong> Heart pumps blood, lungs exchange oxygen, brain processes signals.<br><br>
+        Knowing anatomy (structure) without physiology (function) — or vice versa — gives you an incomplete picture. <strong>Computer architecture is the same way.</strong>
+      </p>
+    </div>
+  </div>
+
+  <hr class="separator">
+
+  <!-- CHALLENGE QUIZ -->
+  <div class="challenge-section">
+    <h2>🔥 Challenge Quiz — Test Yourself</h2>
+
+    <div class="question-box" style="margin-bottom:1rem;">
+      <p><strong>Q1.</strong> When you're playing a video game and your character moves, which computer function is <em>primarily</em> happening?</p>
+      <div class="options-grid">
+        <button class="option-btn" onclick="quiz(this,'q1',false)">A) Data Storage</button>
+        <button class="option-btn" onclick="quiz(this,'q1',true)">B) Data Processing</button>
+        <button class="option-btn" onclick="quiz(this,'q1',false)">C) Control only</button>
+        <button class="option-btn" onclick="quiz(this,'q1',false)">D) Data Movement</button>
+      </div>
+      <div class="feedback" id="q1-fb">
+        <strong>✅ Data Processing!</strong> The CPU is constantly processing your inputs (keyboard/controller) and calculating physics, animations, and game logic to produce output on screen.
+      </div>
+    </div>
+
+    <div class="question-box" style="margin-bottom:1rem;">
+      <p><strong>Q2.</strong> Your friend says "Structure and Function are basically the same thing." What's wrong with this?</p>
+      <div class="options-grid">
+        <button class="option-btn" onclick="quiz(this,'q2',false)">A) Nothing — they are the same</button>
+        <button class="option-btn" onclick="quiz(this,'q2',true)">B) Structure is the layout; Function is what components DO</button>
+        <button class="option-btn" onclick="quiz(this,'q2',false)">C) Function is the layout; Structure is what they do</button>
+        <button class="option-btn" onclick="quiz(this,'q2',false)">D) Structure only applies to hardware</button>
+      </div>
+      <div class="feedback" id="q2-fb">
+        <strong>✅ Exactly right!</strong> Structure = static arrangement/connections. Function = dynamic behaviour. Both are needed for a complete picture — one describes the <em>map</em>, the other describes the <em>journey</em>.
+      </div>
+    </div>
+
+    <div class="question-box">
+      <p><strong>Q3.</strong> Which of the four structural components of a computer acts as the "highway" connecting everything?</p>
+      <div class="options-grid">
+        <button class="option-btn" onclick="quiz(this,'q3',false)">A) CPU</button>
+        <button class="option-btn" onclick="quiz(this,'q3',false)">B) Main Memory</button>
+        <button class="option-btn" onclick="quiz(this,'q3',true)">C) System Interconnection (Bus)</button>
+        <button class="option-btn" onclick="quiz(this,'q3',false)">D) I/O</button>
+      </div>
+      <div class="feedback" id="q3-fb">
+        <strong>✅ The System Bus!</strong> It's the communication highway. Without it, the CPU, Memory, and I/O couldn't exchange any data — they'd be isolated islands. Data, addresses, and control signals all travel on the bus.
+      </div>
+    </div>
+  </div>
+
+  <!-- NAV -->
+  <div class="nav-bar">
+    <div style="font-family:'Space Mono',monospace; font-size:0.8rem; color:var(--muted);">Topic 1 of 12</div>
+    <div class="score-badge" id="scoreBadge">⚡ Score: 0 / 4</div>
+    <button class="next-btn" onclick="alert('Great work! 🎉 Ask me to continue to Topic 2: Computer Evolution & Performance!')">Next Topic →</button>
+  </div>
+
+</div>
+
+<script>
+  let score = 0;
+  let total = 0;
+
+  function updateProgress(p) {
+    document.getElementById('progress').style.width = p + '%';
+    document.getElementById('pct').textContent = p + '%';
+  }
+
+  function answer(btn, correct) {
+    const btns = btn.parentElement.querySelectorAll('.option-btn');
+    btns.forEach(b => b.disabled = true);
+    if (correct) {
+      btn.classList.add('correct');
+      score++;
+      total++;
+    } else {
+      btn.classList.add('wrong');
+      total++;
+      btns.forEach(b => { if (b.onclick.toString().includes('true')) b.classList.add('correct'); });
+    }
+    document.getElementById('feedback').classList.add('show');
+    updateScore();
+    updateProgress(35);
+  }
+
+  function quiz(btn, id, correct) {
+    const btns = btn.parentElement.querySelectorAll('.option-btn');
+    btns.forEach(b => b.disabled = true);
+    if (correct) {
+      btn.classList.add('correct');
+      score++;
+      total++;
+    } else {
+      btn.classList.add('wrong');
+      total++;
+      btns.forEach(b => { if (b.onclick.toString().includes("'" + id + "',true")) b.classList.add('correct'); });
+    }
+    document.getElementById(id + '-fb').classList.add('show');
+    updateScore();
+    if (total >= 4) updateProgress(100);
+    else updateProgress(35 + total * 20);
+  }
+
+  function updateScore() {
+    document.getElementById('scoreBadge').textContent = '⚡ Score: ' + score + ' / ' + (total);
+  }
+
+  function showFunction(id) {
+    document.querySelectorAll('.function-detail').forEach(el => el.classList.remove('show'));
+    document.querySelectorAll('.toggle-btn').forEach(el => el.classList.remove('active'));
+    document.getElementById('fn-' + id).classList.add('show');
+    event.target.classList.add('active');
+  }
+</script>
+
+</body>
+</html>
