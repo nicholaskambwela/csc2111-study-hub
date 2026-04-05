@@ -286,7 +286,16 @@ a:hover {
   background: rgba(230, 57, 70, 0.1);
   color: var(--accent-highlight);
 }
-  .finish-btn{background:var(--accent2);color:#fff;border:none;padding:0.8rem 2rem;border-radius:8px;font-family:'Outfit',sans-serif;font-weight:700;cursor:pointer;transition:opacity 0.2s;}
+  .finish-btn{
+  background-color: var(--surface-color);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
+  padding: 2rem;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;}
   .finish-btn:hover{opacity:0.85;}
 
 
