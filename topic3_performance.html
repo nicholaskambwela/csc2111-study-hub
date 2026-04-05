@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CSC 2111 – Topic 3: Designing for Performance</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;700&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  [data-theme="dark"] {
+    --bg: #0a0e1a;
+    --surface: #111827;
+    --card: #1a2235;
+    --accent: #00e5ff;
+    --accent2: #ff6b35;
+    --accent3: #a8ff3e;
+    --text: #e8edf5;
+    --text-dim: #7a8899;
+    --border: rgba(0,229,255,0.15);
+    --correct: #a8ff3e;
+    --wrong: #ff4757;
+    --glow: 0 0 20px rgba(0,229,255,0.25);
+  }
+  [data-theme="light"] {
+    --bg: #f5f0e8;
+    --surface: #ece7de;
+    --card: #fff;
+    --accent: #c0392b;
+    --accent2: #2c3e50;
+    --accent3: #27ae60;
+    --text: #1a1a1a;
+    --text-dim: #555;
+    --border: #d5cfc4;
+    --correct: #27ae60;
+    --wrong: #c0392b;
+    --glow: 0 4px 12px rgba(0,0,0,0.08);
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    font-family:'Outfit',sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    min-height:100vh;
+    display:flex;
+    transition:background 0.3s,color 0.3s;
+  }
+
+  [data-theme="dark"] body::before {
+    content:'';position:fixed;inset:0;
+    background-image:linear-gradient(rgba(0,229,255,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,229,255,0.03) 1px,transparent 1px);
+    background-size:40px 40px;z-index:0;pointer-events:none;
+  }
+  [data-theme="light"] body::before {
+    content:'';position:fixed;inset:0;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4'%3E%3Crect width='4' height='4' fill='%23f5f0e8'/%3E%3Ccircle cx='1' cy='1' r='0.5' fill='%23e8e2d9' opacity='0.5'/%3E%3C/svg%3E");
+    pointer-events:none;z-index:0;
+  }
+
+  /* SIDEBAR */
+  .sidebar{width:280px;background:#fff;border-right:1px solid #dee2e6;height:100vh;position:fixed;left:0;top:0;display:flex;flex-direction:column;z-index:1000;}
+  .sidebar-header{padding:2.5rem 2rem;border-bottom:1px solid #dee2e6;}
+  .sidebar-header h2{font-size:1.4rem;font-weight:700;color:#2b2d42;margin-bottom:0.5rem;}
+  .course-code{display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:0.8rem;color:#e63946;background:rgba(230,57,70,0.1);padding:0.2rem 0.6rem;border-radius:4px;font-weight:600;}
+  .nav-menu{padding:2rem 0;overflow-y:auto;flex-grow:1;}
+  .nav-item{list-style:none;}
+  .nav-link{display:flex;align-items:center;padding:0.8rem 2rem;color:#6c757d;font-weight:500;text-decoration:none;transition:all 0.2s;border-left:3px solid transparent;font-size:0.9rem;}
+  .nav-link:hover,.nav-link.active{color:#2b2d42;background:rgba(69,123,157,0.05);border-left-color:#e63946;}
+  .nav-icon{margin-right:1rem;font-size:1.1rem;width:24px;text-align:center;}
+  .nav-group-title{padding:1.5rem 2rem 0.5rem;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.1em;color:#6c757d;font-weight:600;}
+
+  /* MAIN */
+  .main-content{flex:1;margin-left:280px;padding:2rem 3rem 4rem;position:relative;z-index:1;}
+  .container{max-width:900px;margin:0 auto;}
+
+  /* THEME TOGGLE */
+  .theme-toggle{position:fixed;top:1.2rem;right:1.5rem;z-index:2000;background:var(--card);border:1px solid var(--border);color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:0.7rem;padding:0.5rem 1rem;border-radius:20px;cursor:pointer;letter-spacing:0.05em;transition:all 0.2s;}
+  .theme-toggle:hover{border-color:var(--accent);color:var(--accent);}
+
+  /* HEADER */
+  header{padding:2.5rem 0 2rem;border-bottom:2px solid var(--border);margin-bottom:2.5rem;animation:slideIn 0.6s ease both;}
+  .course-tag{font-family:'IBM Plex Mono',monospace;font-size:0.72rem;color:var(--accent);letter-spacing:3px;text-transform:uppercase;margin-bottom:0.8rem;display:block;}
+  h1{font-size:clamp(2rem,5vw,3.2rem);font-weight:700;line-height:1.1;color:var(--text);margin-bottom:0.5rem;}
+  h1 span{color:var(--accent);}
+  header p{font-family:'IBM Plex Mono',monospace;font-size:0.8rem;color:var(--text-dim);}
+
+  /* SECTIONS */
+  .section{margin:3rem 0;animation:fadeIn 0.5s ease both;}
+  .section-label{font-family:'IBM Plex Mono',monospace;font-size:0.68rem;letter-spacing:3px;text-transform:uppercase;color:var(--accent);margin-bottom:0.5rem;}
+  .section h2{font-size:1.7rem;font-weight:700;color:var(--text);margin-bottom:1rem;padding-bottom:0.5rem;border-bottom:2px solid var(--border);position:relative;}
+  [data-theme="dark"] .section h2::after{content:'';position:absolute;bottom:-2px;left:0;width:60px;height:2px;background:var(--accent);}
+  p{color:var(--text-dim);line-height:1.8;margin-bottom:1rem;font-size:0.95rem;}
+
+  /* INFO GRID */
+  .info-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin:1.5rem 0;}
+  .info-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:1.3rem;transition:all 0.2s;}
+  .info-card:hover{transform:translateY(-3px);box-shadow:var(--glow);}
+  .info-card .icon{font-size:1.8rem;margin-bottom:0.5rem;}
+  .info-card h4{font-size:1rem;font-weight:700;color:var(--accent);margin-bottom:0.4rem;}
+  .info-card p{font-size:0.85rem;margin:0;}
+
+  /* FORMULA BOX */
+  .formula-box{background:var(--accent2);color:#fff;border-radius:10px;padding:1.8rem;text-align:center;margin:1.5rem 0;font-family:'IBM Plex Mono',monospace;}
+  .formula-box .formula{font-size:clamp(1rem,3vw,1.4rem);font-weight:700;margin:1rem 0;background:rgba(255,255,255,0.1);border-radius:8px;padding:1rem;border:1px solid rgba(255,255,255,0.2);}
+  .formula-box .legend{font-size:0.8rem;opacity:0.85;line-height:2;}
+
+  /* CALLOUT */
+  .callout{border-left:4px solid var(--accent);background:rgba(0,229,255,0.05);padding:1.2rem 1.5rem;border-radius:0 8px 8px 0;margin:1.2rem 0;font-size:0.9rem;line-height:1.8;color:var(--text-dim);}
+  [data-theme="light"] .callout{background:rgba(192,57,43,0.05);}
+  .callout.warning{border-color:var(--accent2);background:rgba(255,107,53,0.07);}
+  .callout.success{border-color:var(--accent3);background:rgba(168,255,62,0.06);}
+  [data-theme="light"] .callout.success{background:rgba(39,174,96,0.07);}
+  .callout strong{color:var(--text);}
+
+  /* PIPELINE */
+  .pipeline-wrap{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:1.5rem;margin:1.5rem 0;overflow-x:auto;}
+  .pipeline-wrap h4{font-family:'IBM Plex Mono',monospace;font-size:0.72rem;color:var(--text-dim);letter-spacing:1px;margin-bottom:1rem;text-align:center;}
+  .pipeline{display:flex;align-items:center;min-width:400px;justify-content:center;}
+  .pipe-stage{color:#000;font-family:'IBM Plex Mono',monospace;font-size:0.72rem;font-weight:700;padding:0.7rem 1rem;text-align:center;min-width:80px;position:relative;background:var(--accent);}
+  .pipe-stage::after{content:'';position:absolute;right:-14px;top:50%;transform:translateY(-50%);border:14px solid transparent;border-left-color:var(--accent);z-index:2;}
+  .pipe-stage:last-child::after{display:none;}
+  .pipe-stage.s2{background:#ff6b35;}.pipe-stage.s2::after{border-left-color:#ff6b35;}
+  .pipe-stage.s3{background:#a8ff3e;}.pipe-stage.s3::after{border-left-color:#a8ff3e;}
+  .pipe-stage.s4{background:#f59e0b;}.pipe-stage.s4::after{border-left-color:#f59e0b;}
+  .pipe-stage.s5{background:#7c6af7;color:#fff;}.pipe-stage.s5::after{border-left-color:#7c6af7;}
+
+  /* TABLE */
+  .compare-table{width:100%;border-collapse:collapse;margin:1.5rem 0;font-size:0.88rem;border-radius:8px;overflow:hidden;}
+  .compare-table thead{background:var(--accent2);color:#fff;}
+  .compare-table thead th{padding:0.9rem 1.2rem;text-align:left;font-family:'IBM Plex Mono',monospace;font-size:0.72rem;letter-spacing:1px;text-transform:uppercase;}
+  .compare-table tbody tr{border-bottom:1px solid var(--border);transition:background 0.15s;}
+  .compare-table tbody tr:hover{background:rgba(0,229,255,0.04);}
+  [data-theme="light"] .compare-table tbody tr:hover{background:rgba(192,57,43,0.04);}
+  .compare-table tbody tr:last-child{border-bottom:none;}
+  .compare-table td{padding:0.85rem 1.2rem;color:var(--text-dim);vertical-align:top;}
+  .compare-table td:first-child{font-family:'IBM Plex Mono',monospace;color:var(--accent);font-weight:700;font-size:0.82rem;}
+
+  /* AMDAHL CALC */
+  .amdahl-calculator{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:2rem;margin:1.5rem 0;}
+  .amdahl-calculator h4{font-family:'IBM Plex Mono',monospace;font-size:0.78rem;color:var(--accent);letter-spacing:2px;text-transform:uppercase;margin-bottom:1.5rem;}
+  .calc-row{display:flex;gap:1rem;align-items:center;margin-bottom:1rem;flex-wrap:wrap;}
+  .calc-row label{font-family:'IBM Plex Mono',monospace;font-size:0.78rem;color:var(--text-dim);min-width:200px;}
+  .calc-row input[type="range"]{flex:1;min-width:150px;accent-color:var(--accent);}
+  .calc-row .val{font-family:'IBM Plex Mono',monospace;font-size:0.85rem;color:var(--accent);min-width:50px;text-align:right;}
+  .calc-result{margin-top:1.5rem;padding:1.2rem;background:rgba(0,229,255,0.06);border:1px solid var(--accent);border-radius:8px;font-family:'IBM Plex Mono',monospace;font-size:0.9rem;color:var(--text);text-align:center;}
+  [data-theme="light"] .calc-result{background:rgba(192,57,43,0.05);border-color:var(--accent);}
+  .calc-result .big{font-size:2rem;color:var(--accent);font-weight:700;display:block;margin:0.3rem 0;}
+
+  /* QUIZ */
+  .quiz-section{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:2rem;margin:2rem 0;}
+  .quiz-section h3{color:var(--accent2);font-size:1.2rem;margin-bottom:1.5rem;}
+  .q-block{margin-bottom:1.8rem;}
+  .q-block p{font-size:0.95rem;font-weight:600;color:var(--text);margin-bottom:0.8rem;line-height:1.6;}
+  .opts{display:grid;grid-template-columns:1fr 1fr;gap:0.6rem;}
+  .opt{background:var(--surface);border:2px solid var(--border);color:var(--text-dim);font-family:'Outfit',sans-serif;font-size:0.875rem;padding:0.7rem 1rem;border-radius:8px;cursor:pointer;text-align:left;transition:all 0.2s;}
+  .opt:hover:not(:disabled){border-color:var(--accent);color:var(--text);transform:translateY(-2px);}
+  .opt.correct{background:rgba(168,255,62,0.1);border-color:var(--correct);color:var(--correct);font-weight:700;}
+  .opt.wrong{background:rgba(255,71,87,0.1);border-color:var(--wrong);color:var(--wrong);}
+  .opt:disabled{cursor:default;transform:none;}
+  .q-feedback{display:none;background:var(--surface);border-left:4px solid var(--correct);border-radius:0 8px 8px 0;padding:0.9rem 1.2rem;margin-top:0.7rem;font-size:0.875rem;line-height:1.7;color:var(--text-dim);}
+  .q-feedback.show{display:block;animation:fadeIn 0.3s ease;}
+  .q-feedback strong{color:var(--text);}
+
+  /* REVEAL */
+  .reveal-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1.3rem 1.5rem;margin-bottom:1rem;}
+  .reveal-card .card-meta{display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.8rem;}
+  .badge{font-family:'IBM Plex Mono',monospace;font-size:0.62rem;letter-spacing:1px;text-transform:uppercase;padding:0.2rem 0.6rem;border-radius:3px;font-weight:700;}
+  .badge-source{background:rgba(0,229,255,0.1);color:var(--accent);}
+  .badge-marks{background:rgba(255,107,53,0.1);color:var(--accent2);}
+  [data-theme="light"] .badge-source{background:rgba(192,57,43,0.1);}
+  .reveal-q{font-size:0.95rem;color:var(--text);line-height:1.6;margin-bottom:1rem;}
+  .reveal-q strong{color:var(--accent2);}
+  .reveal-btn{width:100%;font-family:'Outfit',sans-serif;font-size:0.82rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:0.8rem;background:transparent;border:1.5px solid var(--accent);color:var(--accent);border-radius:6px;cursor:pointer;transition:all 0.2s;}
+  .reveal-btn:hover{background:rgba(0,229,255,0.08);}
+  [data-theme="light"] .reveal-btn:hover{background:rgba(192,57,43,0.06);}
+  .reveal-answer{display:none;margin-top:1rem;background:var(--card);border-left:3px solid var(--accent3);border-radius:0 8px 8px 0;padding:1rem 1.2rem;font-size:0.875rem;line-height:1.75;color:var(--text-dim);animation:fadeIn 0.3s ease;}
+  .reveal-answer.show{display:block;}
+  .reveal-answer .a-label{font-family:'IBM Plex Mono',monospace;font-size:0.65rem;color:var(--accent3);letter-spacing:2px;text-transform:uppercase;margin-bottom:0.5rem;display:block;}
+
+  /* CALC QUIZ */
+  .calc-quiz{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1.5rem;margin-bottom:1.2rem;}
+  .calc-quiz .cq-source{font-family:'IBM Plex Mono',monospace;font-size:0.65rem;color:var(--accent);letter-spacing:2px;text-transform:uppercase;margin-bottom:0.6rem;}
+  .calc-quiz .cq-q{font-size:0.95rem;font-weight:600;color:var(--text);margin-bottom:1rem;line-height:1.6;}
+  .calc-input-row{display:flex;gap:0.7rem;flex-wrap:wrap;align-items:center;}
+  .calc-input{background:var(--card);border:1px solid var(--border);color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:0.9rem;padding:0.6rem 1rem;border-radius:6px;outline:none;width:140px;transition:border-color 0.2s;}
+  .calc-input:focus{border-color:var(--accent);}
+  .check-btn{background:var(--accent2);color:#fff;border:none;padding:0.6rem 1.2rem;border-radius:6px;font-family:'Outfit',sans-serif;font-weight:700;font-size:0.85rem;cursor:pointer;transition:opacity 0.2s;}
+  .check-btn:hover{opacity:0.85;}
+  .calc-fb{margin-top:0.8rem;font-family:'IBM Plex Mono',monospace;font-size:0.8rem;padding:0.6rem 1rem;border-radius:6px;display:none;}
+  .calc-fb.correct{display:block;background:rgba(168,255,62,0.1);color:var(--correct);border:1px solid var(--correct);}
+  .calc-fb.wrong{display:block;background:rgba(255,71,87,0.1);color:var(--wrong);border:1px solid var(--wrong);}
+
+  /* SCORE BAR */
+  .score-bar{display:flex;justify-content:space-between;align-items:center;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:1rem 1.5rem;margin:2rem 0;flex-wrap:wrap;gap:1rem;}
+  .score-bar span{font-family:'IBM Plex Mono',monospace;font-size:0.8rem;color:var(--text-dim);}
+  .score-bar strong{font-family:'IBM Plex Mono',monospace;font-size:1.1rem;color:var(--accent);}
+  .finish-btn{background:var(--accent2);color:#fff;border:none;padding:0.8rem 2rem;border-radius:8px;font-family:'Outfit',sans-serif;font-weight:700;cursor:pointer;transition:opacity 0.2s;}
+  .finish-btn:hover{opacity:0.85;}
+
+  .exam-alert{background:rgba(255,107,53,0.08);border:2px dashed var(--accent2);border-radius:10px;padding:1.2rem 1.5rem;margin:1rem 0;font-size:0.9rem;line-height:1.8;display:flex;gap:1rem;align-items:flex-start;color:var(--text-dim);}
+  .exam-alert .icon{font-size:1.5rem;flex-shrink:0;}
+  .exam-alert strong{color:var(--accent2);}
+
+  hr{border:none;border-top:1px dashed var(--border);margin:2.5rem 0;}
+
+  @keyframes slideIn{from{opacity:0;transform:translateX(-20px);}to{opacity:1;transform:translateX(0);}}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+
+  @media(max-width:900px){
+    .sidebar{transform:translateX(-100%);}
+    .main-content{margin-left:0;padding:1.5rem;}
+    .opts{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+
+<button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">☀️ Light Mode</button>
+
+<aside class="sidebar">
+  <div class="sidebar-header">
+    <h2>Architecture Hub</h2>
+    <span class="course-code">CSC 2111</span>
+  </div>
+  <nav class="nav-menu">
+    <div class="nav-group-title">Overview</div>
+    <ul>
+      <li class="nav-item"><a href="index.html" class="nav-link"><span class="nav-icon">🏠</span> Dashboard</a></li>
+      <li class="nav-item"><a href="terminology.html" class="nav-link"><span class="nav-icon">📖</span> Terminology</a></li>
+    </ul>
+    <div class="nav-group-title">Topics</div>
+    <ul>
+      <li class="nav-item"><a href="topic1.html" class="nav-link"><span class="nav-icon">01</span> Structure & Function</a></li>
+      <li class="nav-item"><a href="topic2.html" class="nav-link"><span class="nav-icon">02</span> Evolution</a></li>
+      <li class="nav-item"><a href="topic3_performance.html" class="nav-link active"><span class="nav-icon">03</span> Designing for Performance</a></li>
+    </ul>
+    <div class="nav-group-title">Assessments</div>
+    <ul>
+      <li class="nav-item"><a href="quiz_topic1.html" class="nav-link"><span class="nav-icon">🧠</span> Topic 1 Quiz</a></li>
+      <li class="nav-item"><a href="quiz_topic2.html" class="nav-link"><span class="nav-icon">🧠</span> Topic 2 Quiz</a></li>
+      <li class="nav-item"><a href="IAS_Quiz_CSC2111.html" class="nav-link"><span class="nav-icon">🧠</span> IAS Quiz</a></li>
+    </ul>
+    <div class="nav-group-title">Study Materials</div>
+    <ul>
+      <li class="nav-item"><a href="https://drive.google.com/drive/folders/1xwONuQDSrN_1rwHUkRajKrvDlfbT7kjL?usp=drive_link" class="nav-link"><span class="nav-icon">📝</span> Study Resources</a></li>
+    </ul>
+  </nav>
+</aside>
+
+<main class="main-content">
+<div class="container">
+
+  <header>
+    <span class="course-tag">CSC 2111 · Topic 03</span>
+    <h1>Designing for <span>Performance</span></h1>
+    <p>// pipelining · superscalar · multicore · Amdahl's Law · cache trade-offs</p>
+  </header>
+
+  <!-- 01 PERFORMANCE BALANCE -->
+  <div class="section">
+    <div class="section-label">// 01</div>
+    <h2>Performance Balance</h2>
+    <p>The CPU keeps getting faster — but RAM hasn't kept up. This creates a <strong>processor-memory gap</strong>: the CPU sits idle waiting for data it needs. This is the core problem "Designing for Performance" addresses.</p>
+
+    <div class="info-grid">
+      <div class="info-card"><div class="icon">🧠</div><h4>Processor Speed</h4><p>Roughly doubles every 18 months (Moore's Law). Modern CPUs run at 3–5 GHz.</p></div>
+      <div class="info-card"><div class="icon">💾</div><h4>Memory Speed</h4><p>DRAM speed improves much more slowly — creating a widening gap with CPU speed.</p></div>
+      <div class="info-card"><div class="icon">⚠️</div><h4>The Problem</h4><p>CPU stalls waiting for memory. A fast processor doing nothing is a waste of silicon.</p></div>
+      <div class="info-card"><div class="icon">🛠️</div><h4>The Solutions</h4><p>Cache, pipelining, superscalar, branch prediction, multicore — all address this gap.</p></div>
+    </div>
+
+    <div class="exam-alert">
+      <div class="icon">📋</div>
+      <div><strong>Exam Tip:</strong> "Describe three strategies to address the processor-memory gap" is a common question. Answers: <strong>cache memory</strong>, <strong>pipelining / out-of-order execution</strong>, and <strong>prefetching</strong>.</div>
+    </div>
+  </div>
+
+  <hr>
+
+  <!-- 02 PIPELINING -->
+  <div class="section">
+    <div class="section-label">// 02</div>
+    <h2>Pipelining</h2>
+    <p>Pipelining overlaps the execution of multiple instructions — like an assembly line. While instruction 1 is executing, instruction 2 is being decoded, and instruction 3 is being fetched.</p>
+
+    <div class="pipeline-wrap">
+      <h4>// 5-STAGE PIPELINE</h4>
+      <div class="pipeline">
+        <div class="pipe-stage">IF<br><small>Fetch</small></div>
+        <div class="pipe-stage s2">ID<br><small>Decode</small></div>
+        <div class="pipe-stage s3">EX<br><small>Execute</small></div>
+        <div class="pipe-stage s4">MEM<br><small>Memory</small></div>
+        <div class="pipe-stage s5">WB<br><small>Write Back</small></div>
+      </div>
+    </div>
+
+    <table class="compare-table">
+      <thead><tr><th>Feature</th><th>Non-Pipelined</th><th>Pipelined</th></tr></thead>
+      <tbody>
+        <tr><td>Execution</td><td>One at a time, fully sequential</td><td>Multiple instructions overlap in different stages</td></tr>
+        <tr><td>Ideal CPI</td><td>= number of stages</td><td>≈ 1</td></tr>
+        <tr><td>Throughput</td><td>Low</td><td>High</td></tr>
+        <tr><td>Problem</td><td>—</td><td>Hazards cause stalls (bubbles in the pipeline)</td></tr>
+      </tbody>
+    </table>
+
+    <div style="margin-top:1.2rem;">
+      <p style="font-weight:700; color:var(--text); margin-bottom:0.8rem;">Pipeline Hazards:</p>
+      <div class="info-grid">
+        <div class="info-card"><div class="icon">🏗️</div><h4>Structural Hazard</h4><p>Two instructions need the same resource simultaneously. Fix: duplicate resources or stall.</p></div>
+        <div class="info-card"><div class="icon">📊</div><h4>Data Hazard</h4><p>Instruction needs result not yet written. Fix: <strong>forwarding/bypassing</strong>.</p></div>
+        <div class="info-card"><div class="icon">🔀</div><h4>Control Hazard</h4><p>Branch — CPU doesn't know what's next. Fix: <strong>branch prediction</strong>.</p></div>
+      </div>
+    </div>
+
+    <div class="callout">
+      <strong>Pipelining Speedup:</strong> Speedup = Non-pipelined time / Pipelined time = (CPI_old × clock_old) / (CPI_new × clock_new)
+    </div>
+  </div>
+
+  <hr>
+
+  <!-- 03 SUPERSCALAR -->
+  <div class="section">
+    <div class="section-label">// 03</div>
+    <h2>Superscalar Execution</h2>
+    <p>Pipelining gets CPI close to 1. Superscalar breaks through that barrier — issuing <strong>multiple instructions per clock cycle</strong> using multiple execution units in parallel.</p>
+
+    <table class="compare-table">
+      <thead><tr><th>Feature</th><th>Pipelining</th><th>Superscalar</th></tr></thead>
+      <tbody>
+        <tr><td>Concept</td><td>Overlap stages of one stream</td><td>Execute multiple instructions simultaneously</td></tr>
+        <tr><td>Execution units</td><td>One pipeline</td><td>Multiple ALUs, FPUs, load/store units</td></tr>
+        <tr><td>Ideal CPI</td><td>≈ 1</td><td>&lt; 1 (e.g., 0.5 with issue width 2)</td></tr>
+        <tr><td>Disadvantage</td><td>Hazards cause stalls</td><td>Complex hardware, dependency checking</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout warning">
+      <strong>Examiners love this distinction:</strong> Pipelining overlaps <em>stages</em> of different instructions. Superscalar executes <em>multiple instructions</em> at the same stage simultaneously. Both work together in modern CPUs.
+    </div>
+  </div>
+
+  <hr>
+
+  <!-- 04 BRANCH PREDICTION -->
+  <div class="section">
+    <div class="section-label">// 04</div>
+    <h2>Branch Prediction & Speculative Execution</h2>
+    <p>When the CPU hits a branch (if/else, loop), it doesn't know which path to take until the condition is evaluated. Waiting wastes pipeline cycles.</p>
+
+    <div class="info-grid">
+      <div class="info-card"><div class="icon">🎯</div><h4>Branch Prediction</h4><p>CPU guesses which branch will be taken using historical patterns. Modern CPUs are right ~95% of the time.</p></div>
+      <div class="info-card"><div class="icon">🚀</div><h4>Speculative Execution</h4><p>CPU starts executing the predicted path before knowing if the guess is correct. If right — no stall. If wrong — rollback.</p></div>
+      <div class="info-card"><div class="icon">💥</div><h4>Misprediction Cost</h4><p>Wrong guess = flush pipeline, discard work, restart. Can cost 10–20 wasted cycles.</p></div>
+    </div>
+
+    <div class="callout success">
+      <strong>Why it works:</strong> With ~95% accuracy, the pipeline almost never stalls on branches. The CPU is nearly always already working on the right instructions before it even knows for sure.
+    </div>
+  </div>
+
+  <hr>
+
+  <!-- 05 MULTICORE -->
+  <div class="section">
+    <div class="section-label">// 05</div>
+    <h2>Multicore & The Clock Speed Wall</h2>
+    <p>From the 1970s to early 2000s, clock speed was the primary way to improve performance. Then it hit a wall.</p>
+
+    <div class="info-grid">
+      <div class="info-card"><div class="icon">🔥</div><h4>Power Wall</h4><p>Higher clock speed = more power = more heat. Chips were becoming physically impossible to cool.</p></div>
+      <div class="info-card"><div class="icon">⚡</div><h4>The Pivot (~2005)</h4><p>Instead of one fast core, use multiple slower cores. Same transistor budget, parallel work instead.</p></div>
+      <div class="info-card"><div class="icon">🖥️</div><h4>Multicore vs MIC vs GPGPU</h4><p>Multicore: few powerful cores. MIC: dozens of simpler cores. GPGPU: thousands of tiny cores for parallel workloads.</p></div>
+      <div class="info-card"><div class="icon">⚠️</div><h4>Cache Trade-off</h4><p>More cores = less cache per core. More cache = fewer cores. Every chip is a balancing act.</p></div>
+    </div>
+  </div>
+
+  <hr>
+
+  <!-- 06 AMDAHL'S LAW -->
+  <div class="section">
+    <div class="section-label">// 06</div>
+    <h2>Amdahl's Law</h2>
+    <p>Amdahl's Law gives you the <strong>theoretical maximum speedup</strong> from parallelism — and explains why throwing more cores at a problem eventually stops helping.</p>
+
+    <div class="formula-box">
+      <div style="font-size:0.85rem;opacity:0.8;margin-bottom:0.5rem;">AMDAHL'S LAW</div>
+      <div class="formula">Speedup = 1 / ( (1 − f) + f/N )</div>
+      <div class="legend">
+        f = parallelizable fraction of the program<br>
+        N = number of processors<br>
+        (1 − f) = serial portion — this is the bottleneck<br>
+        Maximum speedup (N→∞) = 1 / (1 − f)
+      </div>
+    </div>
+
+    <div class="callout warning">
+      <strong>The brutal truth:</strong> If 35% of your program is serial, max speedup = 1/0.35 = <strong>2.86×</strong> — regardless of how many processors you use. The serial portion is always the ceiling.
+    </div>
+
+    <div class="amdahl-calculator">
+      <h4>⚡ Interactive Amdahl's Calculator</h4>
+      <div class="calc-row">
+        <label>Parallel fraction (f):</label>
+        <input type="range" id="sliderF" min="0" max="99" value="65" oninput="updateAmdahl()">
+        <span class="val" id="valF">0.65</span>
+      </div>
+      <div class="calc-row">
+        <label>Number of processors (N):</label>
+        <input type="range" id="sliderN" min="1" max="64" value="4" oninput="updateAmdahl()">
+        <span class="val" id="valN">4</span>
+      </div>
+      <div class="calc-result">
+        <span>Speedup on N processors:</span>
+        <span class="big" id="speedupN">—</span>
+        <span>Maximum speedup (N→∞):</span>
+        <span class="big" id="speedupMax">—</span>
+      </div>
+    </div>
+  </div>
+
+  <hr>
+
+  <!-- MCQ QUIZ -->
+  <div class="quiz-section">
+    <h3>🔥 Multiple Choice Quiz</h3>
+
+    <div class="q-block">
+      <p>Q1. Why did the industry shift from increasing clock speed to multicore processors in the 2000s?</p>
+      <div class="opts">
+        <button class="opt" onclick="doMCQ(this,'m1',false)">A) Software couldn't use faster clocks</button>
+        <button class="opt" onclick="doMCQ(this,'m1',true)">B) Power consumption and heat became unmanageable</button>
+        <button class="opt" onclick="doMCQ(this,'m1',false)">C) Multicore chips were cheaper to make</button>
+        <button class="opt" onclick="doMCQ(this,'m1',false)">D) Clock speed hit its theoretical maximum</button>
+      </div>
+      <div class="q-feedback" id="m1-fb"><strong>✅ Power wall!</strong> Higher clock = exponentially more heat. Chips were becoming physically impossible to cool. Multicore was the answer — same transistor budget, parallel work instead of raw speed.</div>
+    </div>
+
+    <div class="q-block">
+      <p>Q2. Which correctly distinguishes pipelining from superscalar execution?</p>
+      <div class="opts">
+        <button class="opt" onclick="doMCQ(this,'m2',false)">A) Pipelining uses multiple cores; superscalar uses one</button>
+        <button class="opt" onclick="doMCQ(this,'m2',false)">B) Superscalar is older than pipelining</button>
+        <button class="opt" onclick="doMCQ(this,'m2',true)">C) Pipelining overlaps stages; superscalar issues multiple instructions per cycle</button>
+        <button class="opt" onclick="doMCQ(this,'m2',false)">D) They are the same technique with different names</button>
+      </div>
+      <div class="q-feedback" id="m2-fb"><strong>✅ Correct!</strong> Pipelining = assembly line (overlap stages). Superscalar = multiple assembly lines (CPI &lt; 1 possible). They complement each other in modern CPUs.</div>
+    </div>
+
+    <div class="q-block">
+      <p>Q3. A program is 80% parallelizable. What is the maximum speedup regardless of processor count?</p>
+      <div class="opts">
+        <button class="opt" onclick="doMCQ(this,'m3',false)">A) 8×</button>
+        <button class="opt" onclick="doMCQ(this,'m3',false)">B) 4×</button>
+        <button class="opt" onclick="doMCQ(this,'m3',true)">C) 5×</button>
+        <button class="opt" onclick="doMCQ(this,'m3',false)">D) 80×</button>
+      </div>
+      <div class="q-feedback" id="m3-fb"><strong>✅ 5×!</strong> Max speedup = 1/(1−f) = 1/0.2 = 5. The serial 20% is the hard ceiling — no number of processors gets past it.</div>
+    </div>
+
+    <div class="q-block">
+      <p>Q4. Which pipeline hazard does branch prediction solve?</p>
+      <div class="opts">
+        <button class="opt" onclick="doMCQ(this,'m4',false)">A) Structural hazard</button>
+        <button class="opt" onclick="doMCQ(this,'m4',false)">B) Data hazard</button>
+        <button class="opt" onclick="doMCQ(this,'m4',true)">C) Control hazard</button>
+        <button class="opt" onclick="doMCQ(this,'m4',false)">D) Memory hazard</button>
+      </div>
+      <div class="q-feedback" id="m4-fb"><strong>✅ Control hazard!</strong> Branches create control hazards — the CPU doesn't know which instruction is next. Branch prediction guesses so the pipeline keeps flowing without stalling.</div>
+    </div>
+
+    <div id="mcq-score-bar" style="display:none" class="score-bar">
+      <span>MCQ Complete ✅</span>
+      <strong id="mcq-score">0 / 4</strong>
+      <button class="finish-btn" onclick="window.location.href='index.html'">Back to Dashboard</button>
+    </div>
+  </div>
+
+  <hr>
+
+  <!-- CALC QUIZ -->
+  <div class="quiz-section">
+    <h3>🧮 Calculation Practice</h3>
+
+    <div class="calc-quiz">
+      <div class="cq-source">Adapted · 2018/2019 CA Style</div>
+      <div class="cq-q">
+        Instruction mix: Type A: CPI=1.4, 25% | Type B: CPI=1.9, 30% | Type C: CPI=2.4, 20% | Type D: CPI=2.8, 25%<br><br>
+        <strong>Calculate the average CPI.</strong> (2 decimal places)
+      </div>
+      <div class="calc-input-row">
+        <input class="calc-input" type="number" step="0.01" id="cq1-input" placeholder="Your answer">
+        <button class="check-btn" onclick="checkCalc('cq1',2.05,0.05)">Check</button>
+      </div>
+      <div class="calc-fb" id="cq1-fb"></div>
+    </div>
+
+    <div class="calc-quiz">
+      <div class="cq-source">Adapted · 2018/2019 CA Style</div>
+      <div class="cq-q">
+        Using average CPI = 2.05, the program has <strong>42,000 instructions</strong>, clock rate = <strong>3.0 GHz</strong>.<br><br>
+        <strong>Calculate the execution time in microseconds (μs).</strong> (2 decimal places)
+      </div>
+      <div class="calc-input-row">
+        <input class="calc-input" type="number" step="0.01" id="cq2-input" placeholder="Answer in μs">
+        <button class="check-btn" onclick="checkCalc('cq2',28.7,0.5)">Check</button>
+      </div>
+      <div class="calc-fb" id="cq2-fb"></div>
+    </div>
+
+    <div class="calc-quiz">
+      <div class="cq-source">Amdahl's Law · Exam Style</div>
+      <div class="cq-q">
+        A program takes <strong>20 seconds</strong> on a single processor. It is <strong>80% parallelizable</strong>.<br><br>
+        <strong>Execution time on 8 processors?</strong> (seconds, 2 decimal places)
+      </div>
+      <div class="calc-input-row">
+        <input class="calc-input" type="number" step="0.01" id="cq3-input" placeholder="Seconds">
+        <button class="check-btn" onclick="checkCalc('cq3',6.0,0.15)">Check</button>
+      </div>
+      <div class="calc-fb" id="cq3-fb"></div>
+    </div>
+
+    <div class="calc-quiz">
+      <div class="cq-source">Pipeline Speedup · Exam Style</div>
+      <div class="cq-q">
+        Non-pipelined: <strong>12 ns per instruction</strong>.<br>
+        After pipelining: clock cycle = <strong>3 ns</strong>, average CPI = <strong>1.6</strong> (stalls).<br><br>
+        <strong>Calculate the speedup.</strong> (2 decimal places)
+      </div>
+      <div class="calc-input-row">
+        <input class="calc-input" type="number" step="0.01" id="cq4-input" placeholder="Speedup">
+        <button class="check-btn" onclick="checkCalc('cq4',2.5,0.05)">Check</button>
+      </div>
+      <div class="calc-fb" id="cq4-fb"></div>
+    </div>
+  </div>
+
+  <hr>
+
+  <!-- REVEAL QUIZ -->
+  <div class="quiz-section">
+    <h3>📖 Theory Questions — Reveal Style</h3>
+
+    <div class="reveal-card">
+      <div class="card-meta"><span class="badge badge-source">Lesson 5 · Stallings Ch.2</span><span class="badge badge-marks">6 marks</span></div>
+      <div class="reveal-q">Explain the need for <strong>performance balance</strong>. Describe <strong>three strategies</strong> to address the processor-memory interface gap.</div>
+      <button class="reveal-btn" onclick="toggleReveal(this)">▼ Reveal Answer</button>
+      <div class="reveal-answer">
+        <span class="a-label">▶ Model Answer</span>
+        <strong>Need:</strong> CPU speed has improved far faster than DRAM speed, creating a bottleneck where the CPU stalls waiting for memory. A fast processor doing nothing wastes its potential.<br><br>
+        <strong>Three strategies:</strong><br>
+        1. <strong>Cache memory</strong> — fast storage close to the CPU reduces trips to slow main memory.<br>
+        2. <strong>Pipelining / out-of-order execution</strong> — CPU works on other instructions while waiting for a memory access to complete.<br>
+        3. <strong>Prefetching</strong> — CPU predicts what data is needed next and loads it into cache before it's requested, hiding latency.
+      </div>
+    </div>
+
+    <div class="reveal-card">
+      <div class="card-meta"><span class="badge badge-source">2025 Final Exam Style</span><span class="badge badge-marks">10 marks</span></div>
+      <div class="reveal-q">Explain the <strong>three types of pipeline hazards</strong>. For each, give a brief example and one solution used in modern processors.</div>
+      <button class="reveal-btn" onclick="toggleReveal(this)">▼ Reveal Answer</button>
+      <div class="reveal-answer">
+        <span class="a-label">▶ Model Answer</span>
+        <strong>1. Structural Hazard:</strong> Two instructions need the same hardware resource simultaneously. Example: two instructions both need the memory bus. Solution: duplicate resources (separate instruction/data caches) or pipeline stall.<br><br>
+        <strong>2. Data Hazard:</strong> An instruction needs a result from a previous instruction not yet written. Example: ADD R1,R2,R3 immediately followed by SUB R4,R1,R5 — R1 isn't ready. Solution: <em>forwarding/bypassing</em> — route result directly without waiting for write-back.<br><br>
+        <strong>3. Control Hazard:</strong> A branch means the CPU doesn't know which instruction comes next. Example: an if-statement. Solution: <em>branch prediction</em> — guess the path and speculatively execute. Rollback if wrong.
+      </div>
+    </div>
+
+    <div class="reveal-card">
+      <div class="card-meta"><span class="badge badge-source">Lesson 5 · Common Final</span><span class="badge badge-marks">6 marks</span></div>
+      <div class="reveal-q">Distinguish between <strong>pipelining</strong> and <strong>superscalar execution</strong>. Give one advantage and one disadvantage of each.</div>
+      <button class="reveal-btn" onclick="toggleReveal(this)">▼ Reveal Answer</button>
+      <div class="reveal-answer">
+        <span class="a-label">▶ Model Answer</span>
+        <strong>Pipelining:</strong> Divides instruction execution into stages; different instructions occupy different stages simultaneously.<br>
+        ✓ Increases throughput without increasing clock speed.<br>
+        ✗ Hazards cause stalls that reduce efficiency.<br><br>
+        <strong>Superscalar:</strong> Issues multiple instructions per clock cycle using multiple execution units.<br>
+        ✓ Can achieve CPI &lt; 1 — dramatically higher throughput.<br>
+        ✗ Complex hardware needed to detect dependencies. Higher power consumption.
+      </div>
+    </div>
+
+    <div class="reveal-card">
+      <div class="card-meta"><span class="badge badge-source">Lesson 5 · Multicore</span><span class="badge badge-marks">10 marks</span></div>
+      <div class="reveal-q">Why does adding more cores <strong>not always give linear speedup</strong>? Discuss hardware and software issues. Mention <strong>Amdahl's Law</strong>.</div>
+      <button class="reveal-btn" onclick="toggleReveal(this)">▼ Reveal Answer</button>
+      <div class="reveal-answer">
+        <span class="a-label">▶ Model Answer</span>
+        <strong>Hardware issues:</strong> Cache contention (cores compete for shared cache), memory bandwidth bottleneck (all cores share one memory bus), synchronization overhead (locks cause waiting), increased power consumption.<br><br>
+        <strong>Software issues:</strong> Not all programs are parallelizable — serial sections limit speedup. Thread synchronization bugs (race conditions, deadlocks). Uneven load balancing leaves some cores idle.<br><br>
+        <strong>Amdahl's Law:</strong> Speedup = 1/((1−f) + f/N). The serial fraction (1−f) is the hard ceiling. If 30% is serial, max speedup = 1/0.3 = 3.33× regardless of N. More cores give diminishing returns as the serial portion dominates.
+      </div>
+    </div>
+  </div>
+
+  <div class="score-bar">
+    <span>Topic 3 Complete 🎉</span>
+    <strong>Designing for Performance</strong>
+    <button class="finish-btn" onclick="window.location.href='index.html'">Back to Dashboard →</button>
+  </div>
+
+</div>
+</main>
+
+<script>
+function toggleTheme() {
+  const html = document.documentElement;
+  const btn = document.getElementById('themeBtn');
+  if (html.getAttribute('data-theme') === 'dark') {
+    html.setAttribute('data-theme', 'light');
+    btn.textContent = '🌙 Dark Mode';
+  } else {
+    html.setAttribute('data-theme', 'dark');
+    btn.textContent = '☀️ Light Mode';
+  }
+}
+
+let mcqScore = 0, mcqAnswered = {};
+
+function doMCQ(btn, qId, isCorrect) {
+  if (mcqAnswered[qId]) return;
+  mcqAnswered[qId] = true;
+  const allBtns = btn.closest('.q-block').querySelectorAll('.opt');
+  allBtns.forEach(b => b.disabled = true);
+  if (isCorrect) { btn.classList.add('correct'); mcqScore++; }
+  else {
+    btn.classList.add('wrong');
+    allBtns.forEach(b => { if (b.getAttribute('onclick') && b.getAttribute('onclick').includes('true')) b.classList.add('correct'); });
+  }
+  const fb = document.getElementById(qId + '-fb');
+  if (fb) fb.classList.add('show');
+  if (Object.keys(mcqAnswered).length === 4) {
+    const bar = document.getElementById('mcq-score-bar');
+    bar.style.display = 'flex';
+    document.getElementById('mcq-score').textContent = mcqScore + ' / 4';
+    bar.scrollIntoView({ behavior:'smooth', block:'center' });
+  }
+}
+
+function toggleReveal(btn) {
+  const answer = btn.nextElementSibling;
+  const isOpen = answer.classList.contains('show');
+  answer.classList.toggle('show', !isOpen);
+  btn.textContent = isOpen ? '▼ Reveal Answer' : '▲ Hide Answer';
+}
+
+function checkCalc(id, correct, tolerance) {
+  const input = document.getElementById(id + '-input');
+  const fb = document.getElementById(id + '-fb');
+  const val = parseFloat(input.value);
+  if (isNaN(val)) { fb.className = 'calc-fb wrong'; fb.textContent = 'Enter a number first!'; return; }
+  if (Math.abs(val - correct) <= tolerance) {
+    fb.className = 'calc-fb correct';
+    fb.textContent = '✓ Correct! Answer: ' + correct;
+  } else {
+    fb.className = 'calc-fb wrong';
+    fb.textContent = '✗ Not quite. Check your formula. (Expected ≈ ' + correct + ')';
+  }
+}
+
+function updateAmdahl() {
+  const f = parseInt(document.getElementById('sliderF').value) / 100;
+  const N = parseInt(document.getElementById('sliderN').value);
+  document.getElementById('valF').textContent = f.toFixed(2);
+  document.getElementById('valN').textContent = N;
+  const speedupN = 1 / ((1 - f) + f / N);
+  const speedupMax = 1 / (1 - f);
+  document.getElementById('speedupN').textContent = speedupN.toFixed(2) + '×';
+  document.getElementById('speedupMax').textContent = speedupMax.toFixed(2) + '×';
+}
+
+updateAmdahl();
+</script>
+</body>
+</html>
