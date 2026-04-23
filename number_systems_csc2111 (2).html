@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Number Systems – CSC 2111</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #12121a;
+    --card: #1a1a28;
+    --border: #2a2a42;
+    --accent: #00e5ff;
+    --accent2: #ff6b35;
+    --accent3: #a8ff3e;
+    --text: #e8e8f0;
+    --muted: #888899;
+    --correct: #a8ff3e;
+    --wrong: #ff4466;
+    --mono: 'Space Mono', monospace;
+    --sans: 'Syne', sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── GRID NOISE BACKGROUND ── */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image:
+      linear-gradient(rgba(0,229,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,229,255,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .wrapper { position: relative; z-index: 1; max-width: 900px; margin: 0 auto; padding: 0 20px 80px; }
+
+  /* ── HERO ── */
+  header {
+    padding: 60px 0 40px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 50px;
+  }
+  .tag {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 3px;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 14px;
+    display: block;
+  }
+  h1 {
+    font-size: clamp(2.2rem, 6vw, 4rem);
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -2px;
+    margin-bottom: 16px;
+  }
+  h1 span { color: var(--accent); }
+  .subtitle {
+    color: var(--muted);
+    font-size: 15px;
+    font-family: var(--mono);
+    max-width: 500px;
+  }
+
+  /* ── NAV PILLS ── */
+  .nav-pills {
+    display: flex; flex-wrap: wrap; gap: 10px;
+    margin-bottom: 50px;
+  }
+  .pill {
+    background: var(--card);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: 12px;
+    padding: 8px 16px;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: all .2s;
+    text-decoration: none;
+  }
+  .pill:hover, .pill.active { border-color: var(--accent); color: var(--accent); }
+
+  /* ── SECTION HEADER ── */
+  .section-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 4px;
+    color: var(--accent2);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  h2 {
+    font-size: 1.8rem;
+    font-weight: 800;
+    letter-spacing: -1px;
+    margin-bottom: 24px;
+  }
+  section { margin-bottom: 60px; }
+
+  /* ── CARDS ── */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 24px;
+    margin-bottom: 16px;
+    position: relative;
+    overflow: hidden;
+  }
+  .card::before {
+    content: '';
+    position: absolute; top: 0; left: 0;
+    width: 3px; height: 100%;
+    background: var(--accent);
+  }
+  .card.orange::before { background: var(--accent2); }
+  .card.green::before { background: var(--accent3); }
+
+  /* ── TABLE ── */
+  table {
+    width: 100%; border-collapse: collapse;
+    font-family: var(--mono); font-size: 13px;
+    margin-top: 16px;
+  }
+  th {
+    background: var(--surface);
+    color: var(--accent);
+    padding: 10px 14px;
+    text-align: left;
+    font-size: 11px; letter-spacing: 2px;
+    border-bottom: 1px solid var(--border);
+  }
+  td {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+  }
+  tr:hover td { background: rgba(0,229,255,0.04); }
+
+  /* ── CODE BLOCK ── */
+  .code-block {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 20px;
+    font-family: var(--mono);
+    font-size: 13px;
+    line-height: 1.8;
+    margin: 16px 0;
+    overflow-x: auto;
+  }
+  .code-block .hl { color: var(--accent); font-weight: 700; }
+  .code-block .hl2 { color: var(--accent2); }
+  .code-block .hl3 { color: var(--accent3); }
+  .code-block .dim { color: var(--muted); }
+
+  /* ── CONVERTER ── */
+  .converter {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 28px;
+  }
+  .conv-row {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 16px;
+    align-items: end;
+    margin-bottom: 20px;
+  }
+  .conv-group label {
+    display: block;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: var(--muted);
+    margin-bottom: 8px;
+    text-transform: uppercase;
+  }
+  .conv-group input, .conv-group select {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 14px;
+    padding: 12px 14px;
+    border-radius: 2px;
+    outline: none;
+    transition: border-color .2s;
+  }
+  .conv-group input:focus, .conv-group select:focus { border-color: var(--accent); }
+  .conv-group select option { background: var(--surface); }
+  .arrow-btn {
+    background: var(--accent);
+    color: var(--bg);
+    border: none;
+    font-family: var(--mono);
+    font-size: 18px;
+    width: 44px; height: 44px;
+    border-radius: 2px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: transform .15s;
+  }
+  .arrow-btn:hover { transform: scale(1.1); }
+  .result-box {
+    background: var(--surface);
+    border: 1px solid var(--accent);
+    border-radius: 4px;
+    padding: 16px 20px;
+    font-family: var(--mono);
+    font-size: 1.3rem;
+    color: var(--accent);
+    min-height: 54px;
+    display: flex;
+    align-items: center;
+    letter-spacing: 2px;
+  }
+  .steps-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 16px 20px;
+    font-family: var(--mono);
+    font-size: 12px;
+    line-height: 1.8;
+    color: var(--muted);
+    margin-top: 12px;
+    display: none;
+    white-space: pre-wrap;
+  }
+  .steps-box.show { display: block; }
+  .steps-box .step-val { color: var(--accent3); }
+
+  /* ── QUIZ ── */
+  .quiz-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 28px;
+  }
+  .quiz-q {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 20px;
+    line-height: 1.5;
+  }
+  .quiz-q code {
+    background: var(--surface);
+    color: var(--accent);
+    font-family: var(--mono);
+    padding: 2px 8px;
+    border-radius: 2px;
+  }
+  .options {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .opt {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 13px;
+    padding: 12px 16px;
+    border-radius: 2px;
+    cursor: pointer;
+    text-align: left;
+    transition: all .2s;
+  }
+  .opt:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+  .opt.correct { border-color: var(--correct); color: var(--correct); background: rgba(168,255,62,.08); }
+  .opt.wrong { border-color: var(--wrong); color: var(--wrong); background: rgba(255,68,102,.08); }
+  .opt:disabled { cursor: default; }
+  .quiz-footer {
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 12px;
+  }
+  .feedback {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--muted);
+    flex: 1;
+    min-width: 200px;
+  }
+  .feedback.ok { color: var(--correct); }
+  .feedback.nope { color: var(--wrong); }
+  .btn {
+    background: transparent;
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    font-family: var(--mono);
+    font-size: 12px;
+    padding: 10px 20px;
+    border-radius: 2px;
+    cursor: pointer;
+    letter-spacing: 1px;
+    transition: all .2s;
+  }
+  .btn:hover { background: var(--accent); color: var(--bg); }
+  .btn.secondary { border-color: var(--accent2); color: var(--accent2); }
+  .btn.secondary:hover { background: var(--accent2); color: var(--bg); }
+  .progress-bar {
+    height: 3px;
+    background: var(--border);
+    border-radius: 2px;
+    margin-bottom: 20px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent3));
+    border-radius: 2px;
+    transition: width .4s ease;
+  }
+  .score-display {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+    margin-bottom: 16px;
+  }
+
+  /* ── CHALLENGE ── */
+  .challenge-area {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 28px;
+    margin-bottom: 16px;
+  }
+  .challenge-q {
+    font-size: 1rem; font-weight: 600;
+    margin-bottom: 16px; line-height: 1.5;
+  }
+  .challenge-input-row {
+    display: flex; gap: 10px; align-items: center;
+    flex-wrap: wrap;
+  }
+  .challenge-input {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 16px;
+    padding: 12px 16px;
+    border-radius: 2px;
+    outline: none;
+    flex: 1; min-width: 140px;
+    transition: border-color .2s;
+  }
+  .challenge-input:focus { border-color: var(--accent); }
+  .challenge-feedback {
+    font-family: var(--mono);
+    font-size: 13px;
+    margin-top: 12px;
+    min-height: 20px;
+  }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 600px) {
+    .conv-row { grid-template-columns: 1fr; }
+    .options { grid-template-columns: 1fr; }
+    .arrow-btn { width: 100%; }
+  }
+
+  /* ── SCROLLBAR ── */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  /* ── ANIMATION ── */
+  @keyframes fadeUp {
+    from { opacity:0; transform: translateY(20px); }
+    to { opacity:1; transform: translateY(0); }
+  }
+  section { animation: fadeUp .5s ease forwards; }
+
+  .highlight-word { color: var(--accent2); font-weight: 700; }
+  .note {
+    background: rgba(0,229,255,0.05);
+    border-left: 3px solid var(--accent);
+    padding: 14px 18px;
+    border-radius: 0 4px 4px 0;
+    font-size: 14px;
+    line-height: 1.6;
+    margin: 16px 0;
+    color: var(--muted);
+  }
+  .note strong { color: var(--text); }
+</style>
+</head>
+<body>
+<div class="wrapper">
+
+  <!-- HEADER -->
+  <header>
+    <span class="tag">CSC 2111 · Topic 9</span>
+    <h1>Number<br><span>Systems</span></h1>
+    <p class="subtitle">// binary, octal, hex, BCD, conversions & complements</p>
+  </header>
+
+  <!-- NAV -->
+  <nav class="nav-pills">
+    <a class="pill" href="#summary">Summary</a>
+    <a class="pill" href="#bases">Number Bases</a>
+    <a class="pill" href="#conversions">Conversions</a>
+    <a class="pill" href="#complement">Complements</a>
+    <a class="pill" href="#bcd">BCD & Codes</a>
+    <a class="pill" href="#converter">Interactive Converter</a>
+    <a class="pill" href="#quiz">Quiz</a>
+    <a class="pill" href="#challenge">Brain Challenge</a>
+  </nav>
+
+  <!-- ── SUMMARY ── -->
+  <section id="summary">
+    <p class="section-label">// overview</p>
+    <h2>Why Number Systems?</h2>
+    <div class="card">
+      <p style="line-height:1.7; margin-bottom:12px;">
+        Computers are fundamentally <span class="highlight-word">dumb machines that only understand two states</span> — ON and OFF, 1 and 0. Every number you type, every image you see, every song you hear — it's all stored and processed as sequences of binary digits (bits). Understanding number systems is understanding the language of the machine.
+      </p>
+      <p style="line-height:1.7;">
+        We humans use <strong>base-10 (decimal)</strong> because we have 10 fingers. Computers use <strong>base-2 (binary)</strong> because transistors have 2 states. We use <strong>base-16 (hexadecimal)</strong> as a shorthand for binary because it's more compact. And <strong>base-8 (octal)</strong> shows up in older systems and Unix file permissions.
+      </p>
+    </div>
+    <div class="note">
+      <strong>Exam focus:</strong> UNZA questions heavily test conversions between bases, 2's complement arithmetic, and BCD representation. Make sure you can do all of these by hand.
+    </div>
+  </section>
+
+  <!-- ── NUMBER BASES ── -->
+  <section id="bases">
+    <p class="section-label">// foundation</p>
+    <h2>The Four Bases</h2>
+
+    <div class="card">
+      <strong style="color:var(--accent); font-family:var(--mono);">BASE-10 · Decimal</strong>
+      <p style="margin-top:10px; line-height:1.7; color:var(--muted);">Digits: 0-9. The default. Positional value is powers of 10.</p>
+      <div class="code-block">
+        <span class="dim">Example: </span><span class="hl">347</span><span class="dim"> = 3×10² + 4×10¹ + 7×10⁰</span><br>
+        <span class="dim">       = 300 + 40 + 7 = </span><span class="hl">347</span>
+      </div>
+    </div>
+
+    <div class="card orange">
+      <strong style="color:var(--accent2); font-family:var(--mono);">BASE-2 · Binary</strong>
+      <p style="margin-top:10px; line-height:1.7; color:var(--muted);">Digits: 0, 1. The machine's native tongue. Positional value is powers of 2.</p>
+      <div class="code-block">
+        <span class="dim">Example: </span><span class="hl2">1011</span><span class="dim"> = 1×2³ + 0×2² + 1×2¹ + 1×2⁰</span><br>
+        <span class="dim">       = 8 + 0 + 2 + 1 = </span><span class="hl">11</span><span class="dim"> (decimal)</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <strong style="color:var(--accent); font-family:var(--mono);">BASE-8 · Octal</strong>
+      <p style="margin-top:10px; line-height:1.7; color:var(--muted);">Digits: 0-7. Each octal digit = exactly 3 binary digits.</p>
+      <div class="code-block">
+        <span class="dim">Example: </span><span class="hl">53</span><sub style="color:var(--muted)">8</sub><span class="dim"> = 5×8¹ + 3×8⁰ = 40 + 3 = </span><span class="hl">43</span><span class="dim"> (decimal)</span><br>
+        <span class="dim">Binary shortcut: </span><span class="hl2">101</span><span class="hl3"> 011</span><span class="dim"> → </span><span class="hl">5</span><span class="hl2">3</span><sub style="color:var(--muted)">8</sub>
+      </div>
+    </div>
+
+    <div class="card green">
+      <strong style="color:var(--accent3); font-family:var(--mono);">BASE-16 · Hexadecimal</strong>
+      <p style="margin-top:10px; line-height:1.7; color:var(--muted);">Digits: 0-9, A-F. Each hex digit = exactly 4 binary digits. Very common in architecture (memory addresses, opcodes).</p>
+      <div class="code-block">
+        <span class="dim">Example: </span><span class="hl3">2F</span><sub style="color:var(--muted)">16</sub><span class="dim"> = 2×16¹ + 15×16⁰ = 32 + 15 = </span><span class="hl">47</span><span class="dim"> (decimal)</span><br>
+        <span class="dim">A=10, B=11, C=12, D=13, E=14, F=15</span>
+      </div>
+    </div>
+
+    <!-- Quick Reference Table -->
+    <table>
+      <thead>
+        <tr><th>Decimal</th><th>Binary</th><th>Octal</th><th>Hex</th></tr>
+      </thead>
+      <tbody id="ref-table">
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ── CONVERSIONS ── -->
+  <section id="conversions">
+    <p class="section-label">// the most tested part</p>
+    <h2>Conversion Methods</h2>
+
+    <div class="card">
+      <strong style="color:var(--accent); font-family:var(--mono);">Decimal → Binary (Divide by 2)</strong>
+      <p style="margin-top:10px; line-height:1.7; color:var(--muted);">Keep dividing by 2, collect remainders bottom-to-top.</p>
+      <div class="code-block">
+<span class="dim">Convert 13 to binary:</span>
+<span class="hl">13</span> ÷ 2 = 6  <span class="dim">remainder</span> <span class="hl3">1</span>  ← LSB
+<span class="hl">6</span>  ÷ 2 = 3  <span class="dim">remainder</span> <span class="hl3">0</span>
+<span class="hl">3</span>  ÷ 2 = 1  <span class="dim">remainder</span> <span class="hl3">1</span>
+<span class="hl">1</span>  ÷ 2 = 0  <span class="dim">remainder</span> <span class="hl3">1</span>  ← MSB
+
+<span class="dim">Read remainders ↑ =</span> <span class="hl2">1101</span><sub style="color:var(--muted)">2</sub>
+      </div>
+    </div>
+
+    <div class="card orange">
+      <strong style="color:var(--accent2); font-family:var(--mono);">Binary → Decimal (Expand by Powers)</strong>
+      <p style="margin-top:10px; line-height:1.7; color:var(--muted);">Multiply each bit by its positional value and sum.</p>
+      <div class="code-block">
+<span class="dim">Convert </span><span class="hl2">10110</span><sub style="color:var(--muted)">2</sub><span class="dim"> to decimal:</span>
+<span class="dim">Position:  4   3   2   1   0</span>
+<span class="dim">Bit:       </span><span class="hl">1   0   1   1   0</span>
+<span class="dim">Value:    16 + 0 + 4 + 2 + 0 = </span><span class="hl3">22</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <strong style="color:var(--accent); font-family:var(--mono);">Binary ↔ Hex (Group by 4)</strong>
+      <p style="margin-top:10px; line-height:1.7; color:var(--muted);">Group binary bits into groups of 4 from the right. Each group = 1 hex digit. Dead simple.</p>
+      <div class="code-block">
+<span class="dim">Convert </span><span class="hl2">10111100</span><sub style="color:var(--muted)">2</sub><span class="dim"> to hex:</span>
+<span class="dim">Group 4:  </span><span class="hl">1011</span> <span class="hl3">1100</span>
+<span class="dim">Convert:  </span><span class="hl">B</span>    <span class="hl3">C</span>
+<span class="dim">Result:   </span><span class="hl2">BC</span><sub style="color:var(--muted)">16</sub>
+
+<span class="dim">Going back: B=1011, C=1100 → </span><span class="hl2">10111100</span>
+      </div>
+    </div>
+
+    <div class="card green">
+      <strong style="color:var(--accent3); font-family:var(--mono);">Binary ↔ Octal (Group by 3)</strong>
+      <p style="margin-top:10px; line-height:1.7; color:var(--muted);">Same idea but groups of 3.</p>
+      <div class="code-block">
+<span class="dim">Convert </span><span class="hl2">110101</span><sub style="color:var(--muted)">2</sub><span class="dim"> to octal:</span>
+<span class="dim">Group 3:  </span><span class="hl">110</span> <span class="hl3">101</span>
+<span class="dim">Convert:  </span><span class="hl">6</span>   <span class="hl3">5</span>
+<span class="dim">Result:   </span><span class="hl2">65</span><sub style="color:var(--muted)">8</sub>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── COMPLEMENTS ── -->
+  <section id="complement">
+    <p class="section-label">// how computers do subtraction</p>
+    <h2>1's and 2's Complement</h2>
+
+    <div class="card">
+      <strong style="color:var(--accent); font-family:var(--mono);">Why Complements?</strong>
+      <p style="margin-top:10px; line-height:1.7; color:var(--muted);">
+        Computers don't have a "subtract" circuit — they only add. So to compute A − B, they compute A + (complement of B). Clever, right?
+      </p>
+    </div>
+
+    <div class="card orange">
+      <strong style="color:var(--accent2); font-family:var(--mono);">1's Complement</strong>
+      <p style="margin-top:10px; line-height:1.7; color:var(--muted);">Flip every bit. 0 → 1, 1 → 0.</p>
+      <div class="code-block">
+<span class="dim">1's complement of </span><span class="hl">0110 1001</span>:
+<span class="dim">Flip all bits → </span><span class="hl2">1001 0110</span>
+      </div>
+    </div>
+
+    <div class="card green">
+      <strong style="color:var(--accent3); font-family:var(--mono);">2's Complement</strong>
+      <p style="margin-top:10px; line-height:1.7; color:var(--muted);">The dominant method in modern computers. Two ways to get it:</p>
+      <div class="code-block">
+<span class="dim">METHOD 1: 1's complement + 1</span>
+<span class="dim">Original:     </span><span class="hl">0110 1001</span>
+<span class="dim">1's comp:     </span><span class="hl2">1001 0110</span>
+<span class="dim">+ 1:          </span><span class="hl3">1001 0111</span>  ← 2's complement
+
+<span class="dim">METHOD 2 (Shortcut): </span>
+<span class="dim">Copy bits from right up to AND including first 1,</span>
+<span class="dim">then flip remaining bits.</span>
+
+<span class="dim">Original:  </span><span class="hl">0110 1</span><span class="hl2">0</span><span class="hl3">00</span>
+<span class="dim">           copy→↑  flip→↑</span>
+<span class="dim">Result:    </span><span class="hl3">1001 1</span><span class="hl2">0</span><span class="hl">00</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <strong style="color:var(--accent); font-family:var(--mono);">Subtraction using 2's Complement</strong>
+      <div class="code-block">
+<span class="dim">Compute 15 − 6 using 8-bit binary:</span>
+
+<span class="dim">15 =</span> <span class="hl">0000 1111</span>
+<span class="dim"> 6 =</span> <span class="hl2">0000 0110</span>
+<span class="dim">2's comp of 6 =</span> <span class="hl3">1111 1010</span>
+
+<span class="dim">Add: 0000 1111</span>
+<span class="dim">   + 1111 1010</span>
+<span class="dim">   ──────────</span>
+<span class="dim">  1</span><span class="hl">0000 1001</span>
+<span class="dim">  ↑ discard carry  →  result = 9 ✓</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── BCD ── -->
+  <section id="bcd">
+    <p class="section-label">// binary coded decimal</p>
+    <h2>BCD & Other Codes</h2>
+
+    <div class="card">
+      <strong style="color:var(--accent); font-family:var(--mono);">BCD (Binary Coded Decimal)</strong>
+      <p style="margin-top:10px; line-height:1.7; color:var(--muted);">
+        Each decimal digit is encoded separately as a 4-bit binary. BCD is NOT the same as converting a number to binary.
+      </p>
+      <div class="code-block">
+<span class="dim">BCD of </span><span class="hl">39</span><span class="dim">:</span>
+<span class="dim">  3 → </span><span class="hl2">0011</span>
+<span class="dim">  9 → </span><span class="hl3">1001</span>
+<span class="dim">  BCD = </span><span class="hl">0011 1001</span>
+
+<span class="dim">Note: BCD 39 ≠ binary 39!</span>
+<span class="dim">Binary 39 = </span><span class="hl">0010 0111</span>
+      </div>
+    </div>
+
+    <div class="card orange">
+      <strong style="color:var(--accent2); font-family:var(--mono);">Gray Code</strong>
+      <p style="margin-top:10px; line-height:1.7; color:var(--muted);">
+        Only ONE bit changes between consecutive values. Used in rotating encoders and error minimization — because if two bits flip at the same time in regular binary, you get a wrong value momentarily.
+      </p>
+      <table>
+        <thead><tr><th>Decimal</th><th>Binary</th><th>Gray Code</th></tr></thead>
+        <tbody>
+          <tr><td>0</td><td>000</td><td>000</td></tr>
+          <tr><td>1</td><td>001</td><td>001</td></tr>
+          <tr><td>2</td><td>010</td><td>011</td></tr>
+          <tr><td>3</td><td>011</td><td>010</td></tr>
+          <tr><td>4</td><td>100</td><td>110</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card green">
+      <strong style="color:var(--accent3); font-family:var(--mono);">ASCII</strong>
+      <p style="margin-top:10px; line-height:1.7; color:var(--muted);">
+        7-bit code for text characters. 'A' = 65 = <span style="color:var(--accent); font-family:var(--mono);">0100 0001</span>. Important because character data in memory is stored in ASCII (or its extensions like UTF-8).
+      </p>
+    </div>
+  </section>
+
+  <!-- ── INTERACTIVE CONVERTER ── -->
+  <section id="converter">
+    <p class="section-label">// hands-on tool</p>
+    <h2>Number Converter</h2>
+    <p style="color:var(--muted); font-family:var(--mono); font-size:13px; margin-bottom:20px;">// enter a value, pick the base, see the result + working steps</p>
+
+    <div class="converter">
+      <div class="conv-row">
+        <div class="conv-group">
+          <label>Input Value</label>
+          <input type="text" id="conv-input" placeholder="e.g. 42" />
+        </div>
+        <div class="conv-group" style="width:auto">
+          <label>From</label>
+          <select id="conv-from">
+            <option value="10">Decimal (10)</option>
+            <option value="2">Binary (2)</option>
+            <option value="8">Octal (8)</option>
+            <option value="16">Hex (16)</option>
+          </select>
+        </div>
+        <div class="conv-group" style="width:auto">
+          <label>To</label>
+          <select id="conv-to">
+            <option value="2">Binary (2)</option>
+            <option value="16">Hex (16)</option>
+            <option value="8">Octal (8)</option>
+            <option value="10">Decimal (10)</option>
+          </select>
+        </div>
+      </div>
+
+      <button class="btn" onclick="doConvert()" style="margin-bottom:16px;">→ Convert</button>
+      <button class="btn secondary" onclick="toggleSteps()" style="margin-bottom:16px; margin-left:10px;">Show Steps</button>
+
+      <div style="margin-bottom:4px; font-family:var(--mono); font-size:11px; color:var(--muted); letter-spacing:2px;">RESULT</div>
+      <div class="result-box" id="conv-result">—</div>
+      <div class="steps-box" id="steps-box"></div>
+    </div>
+  </section>
+
+  <!-- ── QUIZ ── -->
+  <section id="quiz">
+    <p class="section-label">// test yourself</p>
+    <h2>Quiz</h2>
+    <p style="color:var(--muted); font-family:var(--mono); font-size:13px; margin-bottom:20px;">// past exam style questions. no cheating on yourself.</p>
+
+    <div class="score-display" id="score-display">Question 1 of 10</div>
+    <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:10%"></div></div>
+
+    <div class="quiz-card">
+      <p class="quiz-q" id="quiz-q"></p>
+      <div class="options" id="quiz-opts"></div>
+      <div class="quiz-footer">
+        <div class="feedback" id="quiz-feedback"></div>
+        <button class="btn" id="next-btn" onclick="nextQuestion()" style="display:none;">Next →</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── BRAIN CHALLENGE ── -->
+  <section id="challenge">
+    <p class="section-label">// type your answer</p>
+    <h2>Brain Challenge</h2>
+    <p style="color:var(--muted); font-family:var(--mono); font-size:13px; margin-bottom:20px;">// no multiple choice. show me you actually know it.</p>
+
+    <div class="challenge-area" id="chal-area">
+      <p class="challenge-q" id="chal-q"></p>
+      <div class="challenge-input-row">
+        <input class="challenge-input" type="text" id="chal-input" placeholder="Your answer..." onkeydown="if(event.key==='Enter') checkChallenge()" />
+        <button class="btn" onclick="checkChallenge()">Check</button>
+        <button class="btn secondary" onclick="newChallenge()">Skip →</button>
+      </div>
+      <div class="challenge-feedback" id="chal-feedback"></div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+// ── REFERENCE TABLE ──
+const tableBody = document.getElementById('ref-table');
+for (let i = 0; i <= 15; i++) {
+  const tr = document.createElement('tr');
+  tr.innerHTML = `<td>${i}</td><td style="color:var(--accent2)">${i.toString(2).padStart(4,'0')}</td><td style="color:var(--accent)">${i.toString(8)}</td><td style="color:var(--accent3)">${i.toString(16).toUpperCase()}</td>`;
+  tableBody.appendChild(tr);
+}
+
+// ── CONVERTER ──
+let stepsVisible = false;
+
+function doConvert() {
+  const val = document.getElementById('conv-input').value.trim();
+  const fromBase = parseInt(document.getElementById('conv-from').value);
+  const toBase = parseInt(document.getElementById('conv-to').value);
+  const resultBox = document.getElementById('conv-result');
+  const stepsBox = document.getElementById('steps-box');
+
+  if (!val) { resultBox.textContent = 'Enter a value'; return; }
+
+  const decimal = parseInt(val, fromBase);
+  if (isNaN(decimal)) { resultBox.textContent = 'Invalid input'; return; }
+
+  const result = decimal.toString(toBase).toUpperCase();
+  resultBox.textContent = result + ' (' + baseLabel(toBase) + ')';
+
+  // Generate steps
+  let steps = '';
+  if (fromBase !== 10) {
+    steps += `Step 1: Convert ${val.toUpperCase()} (base ${fromBase}) → decimal\n`;
+    const chars = val.toUpperCase().split('').reverse();
+    let sum = 0;
+    let parts = [];
+    chars.forEach((c, i) => {
+      const d = parseInt(c, fromBase);
+      const pv = d * Math.pow(fromBase, i);
+      parts.push(`  ${c} × ${fromBase}^${i} = ${pv}`);
+      sum += pv;
+    });
+    steps += parts.reverse().join('\n') + `\n  Total = ${sum}\n\n`;
+  }
+  if (toBase !== 10) {
+    steps += `Step 2: Convert ${decimal} (decimal) → base ${toBase}\n`;
+    let n = decimal;
+    let remainders = [];
+    while (n > 0) {
+      remainders.push(`  ${n} ÷ ${toBase} = ${Math.floor(n/toBase)} remainder ${n % toBase}`);
+      n = Math.floor(n / toBase);
+    }
+    steps += remainders.join('\n') + `\n  Read remainders bottom-to-top = ${result}`;
+  }
+  if (fromBase === 10 && toBase === 10) steps = 'Same base — no conversion needed!';
+  if (!steps) steps = `${val} in decimal = ${decimal}, converted to base ${toBase} = ${result}`;
+
+  stepsBox.textContent = steps;
+  if (stepsVisible) stepsBox.classList.add('show');
+}
+
+function toggleSteps() {
+  stepsVisible = !stepsVisible;
+  const box = document.getElementById('steps-box');
+  box.classList.toggle('show', stepsVisible);
+}
+
+function baseLabel(b) {
+  return {2:'binary',8:'octal',10:'decimal',16:'hex'}[b] || 'base '+b;
+}
+
+// ── QUIZ DATA ──
+const questions = [
+  {
+    q: "Convert <code>1101 0110</code><sub>2</sub> to hexadecimal.",
+    opts: ["D6", "C7", "D5", "E6"],
+    ans: 0,
+    exp: "Group into nibbles: 1101 = D, 0110 = 6. So D6₁₆."
+  },
+  {
+    q: "What is the 2's complement of <code>0011 0100</code>?",
+    opts: ["1100 1011", "1100 1100", "0011 0011", "1111 0111"],
+    ans: 1,
+    exp: "1's complement = 1100 1011, add 1 = 1100 1100."
+  },
+  {
+    q: "What decimal value does <code>1010 1010</code><sub>2</sub> represent?",
+    opts: ["160", "170", "180", "150"],
+    ans: 1,
+    exp: "128+32+8+2 = 170."
+  },
+  {
+    q: "The BCD representation of decimal <code>47</code> is:",
+    opts: ["0010 1111", "0100 0111", "0011 0111", "0100 1111"],
+    ans: 1,
+    exp: "BCD encodes each digit separately: 4 = 0100, 7 = 0111."
+  },
+  {
+    q: "Convert <code>3A</code><sub>16</sub> to decimal.",
+    opts: ["56", "58", "62", "54"],
+    ans: 1,
+    exp: "3×16 + 10×1 = 48 + 10 = 58."
+  },
+  {
+    q: "What is <code>76</code><sub>8</sub> in decimal?",
+    opts: ["60", "62", "64", "58"],
+    ans: 1,
+    exp: "7×8 + 6 = 56 + 6 = 62."
+  },
+  {
+    q: "In Gray Code, how many bits change when going from one number to the next?",
+    opts: ["All bits", "At most 2 bits", "Exactly 1 bit", "Exactly 2 bits"],
+    ans: 2,
+    exp: "Gray Code guarantees only one bit changes between consecutive values — that's the whole point!"
+  },
+  {
+    q: "Using 2's complement, compute <code>8 − 5</code> in 4-bit binary.",
+    opts: ["0011 (3)", "0011 (3) with carry discarded", "1011", "0100"],
+    ans: 1,
+    exp: "5 = 0101, 2's comp = 1011. 1000 + 1011 = 10011. Discard carry → 0011 = 3 ✓"
+  },
+  {
+    q: "Binary <code>11111111</code> equals what in decimal?",
+    opts: ["254", "256", "255", "128"],
+    ans: 2,
+    exp: "128+64+32+16+8+4+2+1 = 255."
+  },
+  {
+    q: "How many bits are needed to represent the hex number <code>FF</code> in binary?",
+    opts: ["4 bits", "6 bits", "8 bits", "16 bits"],
+    ans: 2,
+    exp: "F = 4 bits, FF = 2 × 4 bits = 8 bits."
+  }
+];
+
+let qIndex = 0, score = 0;
+
+function renderQuestion() {
+  const q = questions[qIndex];
+  document.getElementById('quiz-q').innerHTML = q.q;
+  document.getElementById('quiz-feedback').textContent = '';
+  document.getElementById('quiz-feedback').className = 'feedback';
+  document.getElementById('next-btn').style.display = 'none';
+  document.getElementById('score-display').textContent = `Question ${qIndex+1} of ${questions.length} · Score: ${score}`;
+  document.getElementById('progress-fill').style.width = `${((qIndex+1)/questions.length)*100}%`;
+
+  const optsDiv = document.getElementById('quiz-opts');
+  optsDiv.innerHTML = '';
+  q.opts.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'opt';
+    btn.textContent = opt;
+    btn.onclick = () => selectAnswer(i, btn);
+    optsDiv.appendChild(btn);
+  });
+}
+
+function selectAnswer(i, btn) {
+  const q = questions[qIndex];
+  const allBtns = document.querySelectorAll('.opt');
+  allBtns.forEach(b => b.disabled = true);
+
+  if (i === q.ans) {
+    btn.classList.add('correct');
+    document.getElementById('quiz-feedback').textContent = '✓ Correct! ' + q.exp;
+    document.getElementById('quiz-feedback').className = 'feedback ok';
+    score++;
+  } else {
+    btn.classList.add('wrong');
+    allBtns[q.ans].classList.add('correct');
+    document.getElementById('quiz-feedback').textContent = '✗ Wrong. ' + q.exp;
+    document.getElementById('quiz-feedback').className = 'feedback nope';
+  }
+  document.getElementById('next-btn').style.display = 'inline-block';
+}
+
+function nextQuestion() {
+  qIndex++;
+  if (qIndex >= questions.length) {
+    document.getElementById('quiz-q').innerHTML = `Quiz Complete! Score: <span style="color:var(--accent3)">${score}/${questions.length}</span>`;
+    document.getElementById('quiz-opts').innerHTML = '';
+    document.getElementById('quiz-feedback').textContent = score >= 8 ? 'Solid. You know this.' : score >= 5 ? 'Decent, but revisit the weaker spots.' : 'Go back and review. No shame in it.';
+    document.getElementById('next-btn').textContent = 'Restart';
+    document.getElementById('next-btn').onclick = () => { qIndex=0; score=0; renderQuestion(); document.getElementById('next-btn').textContent='Next →'; document.getElementById('next-btn').onclick=nextQuestion; };
+    document.getElementById('next-btn').style.display = 'inline-block';
+    return;
+  }
+  renderQuestion();
+}
+
+renderQuestion();
+
+// ── BRAIN CHALLENGE ──
+const challenges = [
+  { q: "Convert decimal 25 to binary.", a: "11001", hint: "Divide repeatedly by 2" },
+  { q: "Convert binary 10011 to decimal.", a: "19", hint: "16+2+1" },
+  { q: "Convert hex 1F to decimal.", a: "31", hint: "1×16 + 15" },
+  { q: "What is the 2's complement of 0110 (4-bit)?", a: "1010", hint: "Flip: 1001, add 1: 1010" },
+  { q: "Convert octal 17 to decimal.", a: "15", hint: "1×8 + 7" },
+  { q: "Convert binary 1111 0000 to hex.", a: "F0", hint: "1111=F, 0000=0" },
+  { q: "BCD encode decimal 52.", a: "01010010", hint: "5→0101, 2→0010" },
+  { q: "Convert decimal 255 to hex.", a: "FF", hint: "255 = 15×16 + 15" },
+  { q: "Convert hex A3 to binary (8 bits).", a: "10100011", hint: "A=1010, 3=0011" },
+  { q: "What is the 1's complement of 10110011?", a: "01001100", hint: "Flip every bit" },
+];
+
+let chalIndex = 0;
+
+function newChallenge(next = true) {
+  if (next) chalIndex = (chalIndex + 1) % challenges.length;
+  document.getElementById('chal-q').textContent = challenges[chalIndex].q;
+  document.getElementById('chal-input').value = '';
+  document.getElementById('chal-feedback').textContent = '';
+  document.getElementById('chal-feedback').style.color = 'var(--muted)';
+  document.getElementById('chal-input').focus();
+}
+
+function checkChallenge() {
+  const answer = document.getElementById('chal-input').value.trim().toUpperCase().replace(/\s/g,'');
+  const correct = challenges[chalIndex].a.toUpperCase().replace(/\s/g,'');
+  const fb = document.getElementById('chal-feedback');
+  if (answer === correct) {
+    fb.textContent = '✓ Correct! ' + challenges[chalIndex].hint;
+    fb.style.color = 'var(--correct)';
+    setTimeout(() => newChallenge(), 1800);
+  } else {
+    fb.textContent = `✗ Not quite. Hint: ${challenges[chalIndex].hint}`;
+    fb.style.color = 'var(--wrong)';
+  }
+}
+
+newChallenge(false);
+
+// ── NAV PILLS ACTIVE STATE ──
+const sections = document.querySelectorAll('section[id]');
+const pills = document.querySelectorAll('.pill');
+window.addEventListener('scroll', () => {
+  let current = '';
+  sections.forEach(s => { if (window.scrollY >= s.offsetTop - 100) current = s.id; });
+  pills.forEach(p => { p.classList.toggle('active', p.getAttribute('href') === '#'+current); });
+});
+</script>
+</body>
+</html>

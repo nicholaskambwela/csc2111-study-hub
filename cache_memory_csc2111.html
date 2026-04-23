@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cache & Memory Systems – CSC 2111</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f5f0e8;
+  --surface: #ece6d8;
+  --card: #fff9ef;
+  --border: #d4c9b0;
+  --ink: #1a1510;
+  --muted: #7a6f5e;
+  --accent: #c0392b;
+  --accent2: #2c7a4b;
+  --accent3: #1a5276;
+  --gold: #b7860b;
+  --mono: 'DM Mono', monospace;
+  --serif: 'Playfair Display', serif;
+  --sans: 'DM Sans', sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);min-height:100vh;overflow-x:hidden;}
+
+/* TEXTURE */
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23c4b89a' fill-opacity='0.15'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");pointer-events:none;z-index:0;}
+
+.wrap{position:relative;z-index:1;max-width:920px;margin:0 auto;padding:0 24px 100px;}
+
+/* HEADER */
+header{padding:64px 0 48px;border-bottom:2px solid var(--ink);margin-bottom:56px;}
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:4px;color:var(--accent);text-transform:uppercase;margin-bottom:16px;display:block;}
+h1{font-family:var(--serif);font-size:clamp(2.8rem,7vw,5rem);font-weight:900;line-height:0.95;letter-spacing:-2px;margin-bottom:20px;}
+h1 em{color:var(--accent);font-style:normal;}
+.subtitle{font-family:var(--mono);font-size:12px;color:var(--muted);letter-spacing:1px;max-width:520px;line-height:1.7;}
+
+/* PRIORITY BADGE */
+.badge{display:inline-block;font-family:var(--mono);font-size:10px;letter-spacing:2px;padding:4px 10px;border-radius:2px;text-transform:uppercase;margin-right:6px;margin-bottom:6px;}
+.badge-red{background:var(--accent);color:#fff;}
+.badge-green{background:var(--accent2);color:#fff;}
+.badge-blue{background:var(--accent3);color:#fff;}
+.badge-gold{background:var(--gold);color:#fff;}
+
+/* NAV */
+.toc{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:56px;padding:20px;background:var(--surface);border:1px solid var(--border);border-radius:4px;}
+.toc-item{font-family:var(--mono);font-size:11px;color:var(--muted);text-decoration:none;padding:6px 12px;border:1px solid var(--border);border-radius:2px;transition:all .2s;letter-spacing:1px;}
+.toc-item:hover{border-color:var(--accent);color:var(--accent);}
+
+/* SECTION */
+section{margin-bottom:72px;}
+.sec-num{font-family:var(--mono);font-size:10px;letter-spacing:4px;color:var(--muted);text-transform:uppercase;margin-bottom:6px;}
+h2{font-family:var(--serif);font-size:2rem;font-weight:700;letter-spacing:-1px;margin-bottom:6px;}
+.sec-rule{height:2px;background:var(--ink);margin-bottom:28px;}
+
+/* CARDS */
+.card{background:var(--card);border:1px solid var(--border);border-radius:4px;padding:24px;margin-bottom:16px;}
+.card-title{font-family:var(--mono);font-size:11px;letter-spacing:3px;text-transform:uppercase;margin-bottom:14px;}
+.card-title.red{color:var(--accent);}
+.card-title.green{color:var(--accent2);}
+.card-title.blue{color:var(--accent3);}
+.card-title.gold{color:var(--gold);}
+
+/* CODE */
+.code{background:#1a1510;color:#f5f0e8;border-radius:4px;padding:20px;font-family:var(--mono);font-size:12.5px;line-height:1.9;overflow-x:auto;margin:14px 0;white-space:pre;}
+.code .r{color:#e74c3c;}
+.code .g{color:#2ecc71;}
+.code .b{color:#5dade2;}
+.code .y{color:#f4d03f;}
+.code .m{color:#7a6f5e;}
+
+/* TABLE */
+table{width:100%;border-collapse:collapse;font-family:var(--sans);font-size:13px;margin:14px 0;}
+th{background:var(--ink);color:var(--bg);padding:10px 14px;text-align:left;font-size:10px;letter-spacing:2px;text-transform:uppercase;}
+td{padding:10px 14px;border-bottom:1px solid var(--border);}
+tr:nth-child(even) td{background:var(--surface);}
+
+/* FORMULA BOX */
+.formula{background:var(--surface);border-left:4px solid var(--accent);padding:16px 20px;margin:14px 0;border-radius:0 4px 4px 0;}
+.formula p{font-family:var(--mono);font-size:13px;line-height:2;color:var(--ink);}
+.formula .var{color:var(--accent);font-weight:500;}
+.formula .val{color:var(--accent3);}
+
+/* ADDRESS DIAGRAM */
+.addr-diagram{display:flex;margin:16px 0;border:2px solid var(--ink);border-radius:4px;overflow:hidden;font-family:var(--mono);font-size:12px;}
+.addr-seg{padding:12px;text-align:center;border-right:2px solid var(--ink);}
+.addr-seg:last-child{border-right:none;}
+.addr-seg.tag{background:#fde8e8;flex:3;}
+.addr-seg.line{background:#e8f5e9;flex:2;}
+.addr-seg.word{background:#e3f0fb;flex:1;}
+.addr-seg .seg-label{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:4px;}
+.addr-seg .seg-bits{font-size:15px;font-weight:500;}
+.addr-seg .seg-desc{font-size:9px;color:var(--muted);margin-top:3px;}
+
+/* MAPPING VISUAL */
+.map-grid{display:grid;grid-template-columns:1fr auto 1fr;gap:20px;align-items:center;margin:20px 0;}
+.mem-col,.cache-col{border:2px solid var(--border);border-radius:4px;overflow:hidden;}
+.col-header{background:var(--ink);color:var(--bg);font-family:var(--mono);font-size:10px;letter-spacing:2px;padding:8px 14px;text-transform:uppercase;}
+.mem-block,.cache-line{padding:8px 14px;border-bottom:1px solid var(--border);font-family:var(--mono);font-size:11px;display:flex;justify-content:space-between;}
+.mem-block:last-child,.cache-line:last-child{border-bottom:none;}
+.mem-block.highlight{background:#fde8e8;}
+.cache-line.highlight{background:#e8f5e9;}
+.arrow-area{font-size:24px;color:var(--accent);text-align:center;}
+
+/* INTERACTIVE CALCULATOR */
+.calc-box{background:var(--card);border:2px solid var(--ink);border-radius:4px;padding:28px;}
+.calc-title{font-family:var(--serif);font-size:1.2rem;font-weight:700;margin-bottom:20px;}
+.input-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px;}
+.input-group label{display:block;font-family:var(--mono);font-size:10px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:6px;}
+.input-group input,.input-group select{width:100%;background:var(--surface);border:1px solid var(--border);color:var(--ink);font-family:var(--mono);font-size:13px;padding:10px 12px;border-radius:2px;outline:none;transition:border-color .2s;}
+.input-group input:focus,.input-group select:focus{border-color:var(--accent);}
+.calc-btn{background:var(--ink);color:var(--bg);border:none;font-family:var(--mono);font-size:12px;letter-spacing:2px;padding:12px 24px;border-radius:2px;cursor:pointer;text-transform:uppercase;transition:background .2s;}
+.calc-btn:hover{background:var(--accent);}
+.result-area{margin-top:20px;display:none;}
+.result-area.show{display:block;}
+.result-row{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:1px solid var(--border);font-family:var(--mono);font-size:13px;}
+.result-row:last-child{border-bottom:none;}
+.result-label{color:var(--muted);font-size:11px;letter-spacing:1px;}
+.result-val{color:var(--accent);font-weight:500;font-size:15px;}
+.addr-split-display{background:var(--surface);border-radius:4px;padding:14px;margin-top:14px;font-family:var(--mono);font-size:12px;}
+
+/* QUIZ */
+.quiz-wrap{background:var(--card);border:2px solid var(--ink);border-radius:4px;padding:28px;}
+.q-counter{font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:2px;margin-bottom:8px;}
+.progress{height:4px;background:var(--border);border-radius:2px;margin-bottom:24px;}
+.progress-inner{height:100%;background:var(--accent);border-radius:2px;transition:width .4s;}
+.q-text{font-family:var(--sans);font-size:1rem;font-weight:500;line-height:1.6;margin-bottom:20px;}
+.q-text code{background:var(--surface);font-family:var(--mono);padding:2px 8px;border-radius:2px;font-size:0.9em;}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px;}
+.opt{background:var(--surface);border:1px solid var(--border);color:var(--ink);font-family:var(--mono);font-size:12px;padding:12px 14px;border-radius:2px;cursor:pointer;text-align:left;transition:all .2s;line-height:1.4;}
+.opt:hover:not(:disabled){border-color:var(--accent);color:var(--accent);}
+.opt.correct{border-color:var(--accent2);color:var(--accent2);background:#e8f5e9;}
+.opt.wrong{border-color:var(--accent);color:var(--accent);background:#fde8e8;}
+.q-footer{display:flex;gap:12px;align-items:center;flex-wrap:wrap;}
+.feedback{font-family:var(--mono);font-size:11px;flex:1;line-height:1.5;min-width:200px;}
+.feedback.ok{color:var(--accent2);}
+.feedback.nope{color:var(--accent);}
+.btn{background:transparent;border:1px solid var(--ink);color:var(--ink);font-family:var(--mono);font-size:11px;letter-spacing:2px;padding:10px 20px;border-radius:2px;cursor:pointer;text-transform:uppercase;transition:all .2s;}
+.btn:hover{background:var(--ink);color:var(--bg);}
+
+/* DISK CALC */
+.disk-calc{background:var(--card);border:2px solid var(--ink);border-radius:4px;padding:28px;}
+.disk-result{background:var(--surface);border-radius:4px;padding:16px;margin-top:16px;font-family:var(--mono);font-size:12px;line-height:2;display:none;}
+.disk-result.show{display:block;}
+
+/* COMPARISON TABLE */
+.comp-table td:first-child{font-weight:500;font-family:var(--mono);font-size:12px;}
+.good{color:var(--accent2);font-weight:500;}
+.bad{color:var(--accent);font-weight:500;}
+.mid{color:var(--gold);font-weight:500;}
+
+/* NOTE */
+.note{background:#fef9e7;border-left:4px solid var(--gold);padding:14px 18px;border-radius:0 4px 4px 0;font-size:13px;line-height:1.7;margin:14px 0;color:var(--ink);}
+
+/* ANIM */
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
+section{animation:fadeUp .5s ease forwards;}
+
+/* RESPONSIVE */
+@media(max-width:600px){.input-grid,.opts,.map-grid{grid-template-columns:1fr;}.addr-diagram{flex-direction:column;}.addr-seg{border-right:none;border-bottom:2px solid var(--ink);}.addr-seg:last-child{border-bottom:none;}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<!-- HEADER -->
+<header>
+  <span class="eyebrow">CSC 2111 · Topics 4 & 5</span>
+  <h1>Cache &amp; <em>Memory</em><br>Systems</h1>
+  <p class="subtitle">// the highest-yield memory topics from your past papers — built for exam survival</p>
+  <br>
+  <span class="badge badge-red">Very High: Cache Mapping</span>
+  <span class="badge badge-red">Very High: Disk Performance</span>
+  <span class="badge badge-green">High: DRAM vs SRAM</span>
+  <span class="badge badge-gold">Medium: Hard/Soft Errors</span>
+</header>
+
+<!-- TOC -->
+<nav class="toc">
+  <a class="toc-item" href="#hierarchy">Memory Hierarchy</a>
+  <a class="toc-item" href="#why-cache">Why Cache?</a>
+  <a class="toc-item" href="#mapping">Cache Mapping</a>
+  <a class="toc-item" href="#address">Address Division</a>
+  <a class="toc-item" href="#calculator">Address Calculator</a>
+  <a class="toc-item" href="#replacement">Replacement Policy</a>
+  <a class="toc-item" href="#write">Write Policy</a>
+  <a class="toc-item" href="#dram">DRAM vs SRAM</a>
+  <a class="toc-item" href="#disk">Disk Performance</a>
+  <a class="toc-item" href="#errors">Hard/Soft Errors</a>
+  <a class="toc-item" href="#quiz">Exam Quiz</a>
+</nav>
+
+<!-- ── 1. MEMORY HIERARCHY ── -->
+<section id="hierarchy">
+  <p class="sec-num">// 01 · foundation</p>
+  <h2>Memory Hierarchy</h2>
+  <div class="sec-rule"></div>
+
+  <div class="card">
+    <p class="card-title red">The Speed-Cost Problem</p>
+    <p style="line-height:1.7;margin-bottom:14px;">Fast memory is expensive. Cheap memory is slow. The CPU can execute billions of operations per second — main memory takes ~100ns to respond. That gap would make the CPU sit idle 99% of the time. The solution: <strong>layers</strong>.</p>
+    <table>
+      <thead><tr><th>Level</th><th>Type</th><th>Size</th><th>Speed</th><th>Cost</th></tr></thead>
+      <tbody>
+        <tr><td>Registers</td><td>SRAM</td><td>Bytes</td><td style="color:var(--accent2)">~0.3ns</td><td style="color:var(--accent)">Highest</td></tr>
+        <tr><td>Cache (L1/L2/L3)</td><td>SRAM</td><td>KB–MB</td><td style="color:var(--accent2)">1–10ns</td><td style="color:var(--accent)">High</td></tr>
+        <tr><td>Main Memory</td><td>DRAM</td><td>GB</td><td style="color:var(--gold)">~100ns</td><td style="color:var(--gold)">Medium</td></tr>
+        <tr><td>Secondary Storage</td><td>HDD/SSD</td><td>TB</td><td style="color:var(--accent)">ms range</td><td style="color:var(--accent2)">Low</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <p class="card-title blue">Locality of Reference — Why Cache Works</p>
+    <p style="line-height:1.7;margin-bottom:10px;"><strong>Temporal locality:</strong> If you accessed a memory location recently, you'll probably access it again soon. (Think: loop variables.)</p>
+    <p style="line-height:1.7;"><strong>Spatial locality:</strong> If you accessed address X, you'll probably access X+1, X+2 soon. (Think: arrays, sequential code.)</p>
+    <div class="note">Cache works because programs don't access memory randomly — they cluster around the same locations. A tiny cache covering the "hot" data gives massive performance gains.</div>
+  </div>
+</section>
+
+<!-- ── 2. WHY CACHE ── -->
+<section id="why-cache">
+  <p class="sec-num">// 02 · concept</p>
+  <h2>How Cache Improves Performance</h2>
+  <div class="sec-rule"></div>
+
+  <div class="card">
+    <p class="card-title red">Hit vs Miss</p>
+    <p style="line-height:1.7;margin-bottom:12px;">When the CPU needs data, it checks cache first. <strong>Cache hit</strong> — data is there, fast access. <strong>Cache miss</strong> — data not there, go to main memory (slow), bring the block into cache.</p>
+    <div class="formula">
+      <p><span class="var">Hit Ratio (h)</span> = Number of cache hits / Total memory accesses</p>
+      <p><span class="var">Average Access Time (T<sub>avg</sub>)</span> = h × T<sub>cache</sub> + (1−h) × T<sub>main</sub></p>
+      <p style="font-size:11px;color:var(--muted);margin-top:6px;">Example: h=0.9, T_cache=10ns, T_main=200ns → T_avg = 0.9×10 + 0.1×200 = <span style="color:var(--accent)">29ns</span> (vs 200ns without cache!)</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <p class="card-title green">Four Methods of Accessing Memory (Exam Q: 8 marks)</p>
+    <p style="line-height:1.7;margin-bottom:8px;"><strong>1. Sequential access</strong> — data accessed in a fixed, linear sequence (magnetic tape).</p>
+    <p style="line-height:1.7;margin-bottom:8px;"><strong>2. Direct access</strong> — move to a region, then sequential within that region (HDD).</p>
+    <p style="line-height:1.7;margin-bottom:8px;"><strong>3. Random access</strong> — any address accessible in equal time (RAM, cache).</p>
+    <p style="line-height:1.7;"><strong>4. Associative access</strong> — content-addressed, no address needed — match data by value (CAM, cache tags).</p>
+  </div>
+</section>
+
+<!-- ── 3. CACHE MAPPING ── -->
+<section id="mapping">
+  <p class="sec-num">// 03 · most tested topic</p>
+  <h2>Cache Mapping Techniques</h2>
+  <div class="sec-rule"></div>
+
+  <div class="note" style="margin-bottom:20px;"><strong>Exam fact:</strong> This appears in EVERY final exam. Know all three techniques and be able to compute address divisions for each.</div>
+
+  <!-- DIRECT MAPPED -->
+  <div class="card">
+    <p class="card-title red">1. Direct Mapped</p>
+    <p style="line-height:1.7;margin-bottom:12px;">Each main memory block maps to <strong>exactly one</strong> cache line. Simple, fast, but causes <em>conflict misses</em> — two popular blocks can't coexist if they map to the same line.</p>
+    <div class="formula">
+      <p><span class="var">Cache Line</span> = Block Address <strong>mod</strong> Number of Cache Lines</p>
+      <p><span class="var">Address</span> = [ <span style="color:var(--accent)">Tag</span> | <span style="color:var(--accent2)">Line</span> | <span style="color:var(--accent3)">Word</span> ]</p>
+    </div>
+    <div class="code"><span class="m">// Direct Mapped — block 5 with 4 cache lines:</span>
+Block 0 → Line <span class="g">0</span>   (0 mod 4)
+Block 1 → Line <span class="g">1</span>   (1 mod 4)
+Block 4 → Line <span class="g">0</span>   (4 mod 4) ← CONFLICTS with Block 0!
+Block 5 → Line <span class="g">1</span>   (5 mod 4)</div>
+  </div>
+
+  <!-- FULLY ASSOCIATIVE -->
+  <div class="card">
+    <p class="card-title green">2. Fully Associative</p>
+    <p style="line-height:1.7;margin-bottom:12px;">A block can go into <strong>any</strong> cache line. No conflict misses. But checking all lines simultaneously needs complex, expensive hardware (comparators for every line).</p>
+    <div class="formula">
+      <p><span class="var">Address</span> = [ <span style="color:var(--accent)">Tag</span> | <span style="color:var(--accent3)">Word</span> ]</p>
+      <p style="font-size:11px;color:var(--muted);">No Line field — because the block can be anywhere, you compare tag against ALL cache lines at once.</p>
+    </div>
+  </div>
+
+  <!-- SET ASSOCIATIVE -->
+  <div class="card">
+    <p class="card-title blue">3. Set-Associative (The Best of Both) ★ Most Tested</p>
+    <p style="line-height:1.7;margin-bottom:12px;">Cache lines are grouped into <strong>sets</strong>. A block maps to a specific set (like direct-mapped) but can go into <strong>any line within that set</strong> (like fully associative). A k-way set-associative cache has k lines per set.</p>
+    <div class="formula">
+      <p><span class="var">Number of Sets</span> = Total Cache Lines / k (associativity)</p>
+      <p><span class="var">Set Number</span> = Block Address <strong>mod</strong> Number of Sets</p>
+      <p><span class="var">Address</span> = [ <span style="color:var(--accent)">Tag</span> | <span style="color:var(--accent2)">Set</span> | <span style="color:var(--accent3)">Word</span> ]</p>
+    </div>
+    <div class="code"><span class="m">// 4-way set-associative, 32 lines → 32/4 = 8 sets</span>
+Block 0  → Set <span class="g">0</span>   (0 mod 8), any of 4 lines in set 0
+Block 8  → Set <span class="g">0</span>   (8 mod 8), any of 4 lines — no conflict!
+Block 13 → Set <span class="g">5</span>   (13 mod 8)</div>
+  </div>
+
+  <!-- COMPARISON TABLE -->
+  <table class="comp-table">
+    <thead><tr><th>Feature</th><th>Direct Mapped</th><th>Set-Associative</th><th>Fully Associative</th></tr></thead>
+    <tbody>
+      <tr><td>Hardware complexity</td><td class="good">Low</td><td class="mid">Medium</td><td class="bad">High</td></tr>
+      <tr><td>Conflict misses</td><td class="bad">High</td><td class="mid">Medium</td><td class="good">None</td></tr>
+      <tr><td>Hit ratio</td><td class="bad">Lower</td><td class="mid">Better</td><td class="good">Best</td></tr>
+      <tr><td>Lookup speed</td><td class="good">Fastest</td><td class="mid">Fast</td><td class="bad">Slowest</td></tr>
+      <tr><td>Used in practice</td><td class="mid">Some L1</td><td class="good">Most common</td><td class="bad">Rare (TLBs)</td></tr>
+    </tbody>
+  </table>
+
+  <div class="note"><strong>Why is the tag stored in cache?</strong> Because multiple blocks can map to the same cache line (in direct/set-associative). The tag identifies <em>which</em> main memory block is currently occupying that line. Without it, you can't tell if a hit is genuine.</div>
+</section>
+
+<!-- ── 4. ADDRESS DIVISION ── -->
+<section id="address">
+  <p class="sec-num">// 04 · calculation skill</p>
+  <h2>Address Division — Step by Step</h2>
+  <div class="sec-rule"></div>
+
+  <div class="card">
+    <p class="card-title red">The Key Formulas</p>
+    <div class="formula">
+      <p><span class="var">Word bits</span> = log₂(block size in bytes)</p>
+      <p><span class="var">Line/Set bits</span> = log₂(lines) for direct — OR — log₂(lines/k) for k-way set-associative</p>
+      <p><span class="var">Tag bits</span> = Total address bits − Line bits − Word bits</p>
+      <p><span class="var">Total address bits</span> = log₂(main memory size in bytes)</p>
+    </div>
+  </div>
+
+  <!-- WORKED EXAMPLE: 2025 EXAM Q -->
+  <div class="card">
+    <p class="card-title red">★ Worked Example — 2025 Final Exam Style</p>
+    <p style="font-weight:500;margin-bottom:12px;">Main memory = 2¹⁶ bytes (64KB), Block size = 8 bytes, Direct-mapped cache = 32 lines</p>
+
+    <div class="code"><span class="m">Step 1: Total address bits</span>
+Memory = 2<span class="r">16</span> bytes → address bits = <span class="g">16 bits</span>
+
+<span class="m">Step 2: Word bits (offset within block)</span>
+Block size = 8 = 2<span class="r">3</span> → word bits = <span class="g">3 bits</span>
+
+<span class="m">Step 3: Line bits (which cache line)</span>
+32 lines = 2<span class="r">5</span> → line bits = <span class="g">5 bits</span>
+
+<span class="m">Step 4: Tag bits</span>
+Tag = 16 − 5 − 3 = <span class="g">8 bits</span>
+
+<span class="m">Address format: [Tag: 8 bits | Line: 5 bits | Word: 3 bits]</span></div>
+
+    <div class="addr-diagram">
+      <div class="addr-seg tag">
+        <div class="seg-label">Tag</div>
+        <div class="seg-bits">8 bits</div>
+        <div class="seg-desc">bits 15–8</div>
+      </div>
+      <div class="addr-seg line">
+        <div class="seg-label">Line</div>
+        <div class="seg-bits">5 bits</div>
+        <div class="seg-desc">bits 7–3</div>
+      </div>
+      <div class="addr-seg word">
+        <div class="seg-label">Word</div>
+        <div class="seg-bits">3 bits</div>
+        <div class="seg-desc">bits 2–0</div>
+      </div>
+    </div>
+
+    <p style="font-weight:500;margin:20px 0 12px;">Now: Into what line does address <code style="background:var(--surface);font-family:var(--mono);padding:2px 8px;">0001 0001 0001 1011</code> map?</p>
+    <div class="code"><span class="m">Address: 0001 0001 0001 1011</span>
+<span class="m">Split:   [</span><span class="r">0001 0001</span><span class="m">] [</span><span class="g">00011</span><span class="m">] [</span><span class="b">011</span><span class="m">]</span>
+          Tag=0x11   Line=3   Word=3
+
+→ Stored in cache <span class="g">Line 3</span></div>
+
+    <p style="font-weight:500;margin:20px 0 12px;">Address <code style="background:var(--surface);font-family:var(--mono);padding:2px 8px;">1100 0011 0011 0100</code>?</p>
+    <div class="code"><span class="m">Address: 1100 0011 0011 0100</span>
+<span class="m">Split:   [</span><span class="r">1100 0011</span><span class="m">] [</span><span class="g">00110</span><span class="m">] [</span><span class="b">100</span><span class="m">]</span>
+          Tag=0xC3   Line=6   Word=4
+
+→ Stored in cache <span class="g">Line 6</span></div>
+  </div>
+
+  <!-- SET ASSOCIATIVE WORKED EXAMPLE -->
+  <div class="card">
+    <p class="card-title blue">★ 4-Way Set-Associative — 2025 Exam Style</p>
+    <p style="font-weight:500;margin-bottom:12px;">Same machine (2¹⁶ bytes, block=8B), but now 4-way set-associative cache with 32 lines</p>
+    <div class="code"><span class="m">Number of sets = 32 lines / 4 ways = 8 sets = 2³</span>
+
+Word bits = log₂(8) = <span class="g">3 bits</span>
+Set bits  = log₂(8) = <span class="g">3 bits</span>
+Tag bits  = 16 − 3 − 3 = <span class="g">10 bits</span>
+
+<span class="m">Address: [Tag: 10 bits | Set: 3 bits | Word: 3 bits]</span></div>
+
+    <div class="addr-diagram">
+      <div class="addr-seg tag" style="flex:4;">
+        <div class="seg-label">Tag</div>
+        <div class="seg-bits">10 bits</div>
+        <div class="seg-desc">bits 15–6</div>
+      </div>
+      <div class="addr-seg line" style="flex:1.5;">
+        <div class="seg-label">Set</div>
+        <div class="seg-bits">3 bits</div>
+        <div class="seg-desc">bits 5–3</div>
+      </div>
+      <div class="addr-seg word">
+        <div class="seg-label">Word</div>
+        <div class="seg-bits">3 bits</div>
+        <div class="seg-desc">bits 2–0</div>
+      </div>
+    </div>
+
+    <p style="font-weight:500;margin:16px 0 10px;">Into what set does <code style="background:var(--surface);font-family:var(--mono);padding:2px 8px;">0001 0001 0011 1011</code> map?</p>
+    <div class="code"><span class="m">0001 0001 0011 1011</span>
+Set bits = bits [5:3] = <span class="g">111</span> = Set <span class="g">7</span></div>
+  </div>
+</section>
+
+<!-- ── 5. CALCULATOR ── -->
+<section id="calculator">
+  <p class="sec-num">// 05 · interactive tool</p>
+  <h2>Address Division Calculator</h2>
+  <div class="sec-rule"></div>
+
+  <div class="calc-box">
+    <p class="calc-title">Calculate Tag / Line / Word Bits</p>
+    <div class="input-grid">
+      <div class="input-group">
+        <label>Memory Size (2^n bytes) — enter n</label>
+        <input type="number" id="mem-bits" placeholder="e.g. 16 for 64KB" value="16"/>
+      </div>
+      <div class="input-group">
+        <label>Block Size (bytes)</label>
+        <input type="number" id="block-size" placeholder="e.g. 8" value="8"/>
+      </div>
+      <div class="input-group">
+        <label>Number of Cache Lines</label>
+        <input type="number" id="cache-lines" placeholder="e.g. 32" value="32"/>
+      </div>
+      <div class="input-group">
+        <label>Associativity (k-way)</label>
+        <select id="associativity">
+          <option value="1">1 (Direct Mapped)</option>
+          <option value="2">2-way</option>
+          <option value="4">4-way</option>
+          <option value="8">8-way</option>
+          <option value="16">16-way (Fully Assoc.)</option>
+        </select>
+      </div>
+    </div>
+    <div class="input-group" style="margin-bottom:16px;">
+      <label>Test Address (binary, no spaces)</label>
+      <input type="text" id="test-addr" placeholder="e.g. 0001000100011011"/>
+    </div>
+    <button class="calc-btn" onclick="calcAddress()">Calculate →</button>
+
+    <div class="result-area" id="calc-result">
+      <div style="margin-top:20px;border:1px solid var(--border);border-radius:4px;overflow:hidden;">
+        <div id="result-rows"></div>
+      </div>
+      <div class="addr-split-display" id="split-display"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ── 6. REPLACEMENT POLICY ── -->
+<section id="replacement">
+  <p class="sec-num">// 06</p>
+  <h2>Replacement Policies</h2>
+  <div class="sec-rule"></div>
+  <p style="line-height:1.7;margin-bottom:16px;">When cache is full and a new block must come in, which line gets evicted? (Only applies to associative caches — direct mapped has no choice.)</p>
+
+  <div class="card"><p class="card-title red">LRU — Least Recently Used</p><p style="line-height:1.7;">Evict the line that was accessed longest ago. Best performance in practice — exploits temporal locality. But requires tracking access history = more hardware overhead.</p></div>
+  <div class="card"><p class="card-title gold">FIFO — First In, First Out</p><p style="line-height:1.7;">Evict the oldest block regardless of when it was last used. Simpler but ignores usage patterns. Can evict a frequently used block just because it's been there longest.</p></div>
+  <div class="card"><p class="card-title green">Random</p><p style="line-height:1.7;">Pick a victim at random. Surprisingly competitive with LRU in practice, and trivially simple to implement.</p></div>
+</section>
+
+<!-- ── 7. WRITE POLICY ── -->
+<section id="write">
+  <p class="sec-num">// 07</p>
+  <h2>Write Policies</h2>
+  <div class="sec-rule"></div>
+  <p style="line-height:1.7;margin-bottom:16px;">When the CPU writes data — does it update main memory immediately or later?</p>
+
+  <div class="card">
+    <p class="card-title red">Write-Through</p>
+    <p style="line-height:1.7;">Every write to cache is <strong>simultaneously written to main memory</strong>. Cache and memory always consistent. Simpler. But generates lots of memory traffic — slow.</p>
+  </div>
+  <div class="card">
+    <p class="card-title green">Write-Back (Copy-Back)</p>
+    <p style="line-height:1.7;">Write only to cache; update main memory <strong>only when the block is evicted</strong>. A "dirty bit" flags modified lines. Faster, less bus traffic, but cache and memory temporarily inconsistent — problematic in multiprocessor systems.</p>
+  </div>
+</section>
+
+<!-- ── 8. DRAM vs SRAM ── -->
+<section id="dram">
+  <p class="sec-num">// 08 · high exam priority</p>
+  <h2>DRAM vs SRAM</h2>
+  <div class="sec-rule"></div>
+
+  <table>
+    <thead><tr><th>Characteristic</th><th>SRAM</th><th>DRAM</th></tr></thead>
+    <tbody>
+      <tr><td>Technology</td><td>Flip-flops (6 transistors/bit)</td><td>Capacitors (1 transistor + 1 capacitor/bit)</td></tr>
+      <tr><td>Speed</td><td class="good">Very fast (1–10ns)</td><td class="bad">Slower (~100ns)</td></tr>
+      <tr><td>Size (per bit)</td><td class="bad">Large (6T)</td><td class="good">Small (1T1C)</td></tr>
+      <tr><td>Cost</td><td class="bad">Expensive</td><td class="good">Cheap</td></tr>
+      <tr><td>Refresh needed?</td><td class="good">No</td><td class="bad">Yes — capacitors leak charge</td></tr>
+      <tr><td>Power consumption</td><td class="bad">Higher (always on)</td><td class="good">Lower (when idle)</td></tr>
+      <tr><td>Application</td><td>Cache memory, registers</td><td>Main memory (RAM)</td></tr>
+    </tbody>
+  </table>
+
+  <div class="note"><strong>Common exam follow-up:</strong> Why SRAM for cache, DRAM for main memory? SRAM is too expensive and large to use for GBs of RAM — but its speed is essential for cache. DRAM's density and cost make it practical for large main memory, despite being slower.</div>
+</section>
+
+<!-- ── 9. DISK PERFORMANCE ── -->
+<section id="disk">
+  <p class="sec-num">// 09 · calculation heavy</p>
+  <h2>Magnetic Disk Performance</h2>
+  <div class="sec-rule"></div>
+
+  <div class="card">
+    <p class="card-title red">The Three Components of Disk Access Time</p>
+    <div class="formula">
+      <p><span class="var">Seek Time (T<sub>s</sub>)</span> — time to move head to correct track</p>
+      <p><span class="var">Rotational Latency (T<sub>r</sub>)</span> = (1/2) × (1/RPM × 60,000ms) — avg half rotation</p>
+      <p><span class="var">Transfer Time (T<sub>t</sub>)</span> = (1/RPM × 60,000) / sectors per track × 1 sector</p>
+      <p><span class="var">Total Access Time</span> = T<sub>s</sub> + T<sub>r</sub> + T<sub>t</sub></p>
+    </div>
+  </div>
+
+  <!-- WORKED EXAMPLE -->
+  <div class="card">
+    <p class="card-title red">★ Worked Example — From Your Exam Papers</p>
+    <p style="margin-bottom:12px;font-weight:500;">Single platter disk: RPM=7200, Tracks=30,000, Sectors/track=600, Seek=1ms per 100 tracks</p>
+    <div class="code"><span class="m">i. Average Seek Time</span>
+Avg tracks traversed = 30,000/3 ≈ 10,000 tracks
+<span class="m">(For random access, avg = 1/3 of total tracks)</span>
+Seek time = (10,000/100) × 1ms = <span class="g">100ms</span>
+
+<span class="m">ii. Average Rotational Latency</span>
+Time for 1 revolution = 60,000ms / 7200 = 8.33ms
+Avg latency = 8.33 / 2 = <span class="g">4.17ms</span>
+
+<span class="m">iii. Transfer Time (1 sector)</span>
+1 revolution = 600 sectors → 1 sector = 8.33/600 = <span class="g">0.0139ms</span>
+
+<span class="m">iv. Total Average Access Time</span>
+100 + 4.17 + 0.0139 = <span class="g">≈ 104.18ms</span></div>
+  </div>
+
+  <!-- DISK CALCULATOR -->
+  <div class="disk-calc">
+    <p class="calc-title" style="font-family:var(--serif);font-size:1.2rem;font-weight:700;margin-bottom:20px;">Disk Performance Calculator</p>
+    <div class="input-grid">
+      <div class="input-group">
+        <label>Rotation Speed (RPM)</label>
+        <input type="number" id="d-rpm" value="7200" placeholder="e.g. 7200"/>
+      </div>
+      <div class="input-group">
+        <label>Total Tracks (one side)</label>
+        <input type="number" id="d-tracks" value="30000" placeholder="e.g. 30000"/>
+      </div>
+      <div class="input-group">
+        <label>Sectors Per Track</label>
+        <input type="number" id="d-sectors" value="600" placeholder="e.g. 600"/>
+      </div>
+      <div class="input-group">
+        <label>Seek Rate (ms per N tracks)</label>
+        <input type="number" id="d-seek-rate" value="1" placeholder="e.g. 1ms"/>
+      </div>
+      <div class="input-group">
+        <label>N tracks per seek unit</label>
+        <input type="number" id="d-seek-n" value="100" placeholder="e.g. 100"/>
+      </div>
+    </div>
+    <button class="calc-btn" onclick="calcDisk()">Calculate →</button>
+    <div class="disk-result" id="disk-result"></div>
+  </div>
+</section>
+
+<!-- ── 10. ERRORS ── -->
+<section id="errors">
+  <p class="sec-num">// 10</p>
+  <h2>Hard vs Soft Errors</h2>
+  <div class="sec-rule"></div>
+
+  <div class="card">
+    <p class="card-title red">Hard Failures (Permanent)</p>
+    <p style="line-height:1.7;">A physical defect in the memory cell — caused by manufacturing faults, radiation damage, or component aging. The cell permanently gets stuck at 0 or 1. <strong>Cannot be corrected by re-writing</strong>. The cell must be remapped or the chip replaced.</p>
+  </div>
+
+  <div class="card">
+    <p class="card-title gold">Soft Errors (Transient)</p>
+    <p style="line-height:1.7;">A random, non-destructive bit flip — caused by cosmic rays, alpha particles, or power fluctuations. The underlying cell is fine; it just read the wrong value momentarily. <strong>Can be corrected</strong> by detecting and rewriting the correct data.</p>
+    <p style="margin-top:12px;line-height:1.7;">Error Correcting Codes (ECC/SEC) detect and fix soft errors. SEC (Single Error Correction) uses Hamming codes to identify and flip back the wrong bit.</p>
+  </div>
+
+  <table>
+    <thead><tr><th></th><th>Hard Failure</th><th>Soft Error</th></tr></thead>
+    <tbody>
+      <tr><td>Cause</td><td>Physical defect</td><td>Random disturbance</td></tr>
+      <tr><td>Permanence</td><td class="bad">Permanent</td><td class="good">Transient</td></tr>
+      <tr><td>Cell damaged?</td><td class="bad">Yes</td><td class="good">No</td></tr>
+      <tr><td>Correctable?</td><td class="bad">No (replace)</td><td class="good">Yes (ECC)</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ── QUIZ ── -->
+<section id="quiz">
+  <p class="sec-num">// 11 · exam prep</p>
+  <h2>Exam Quiz</h2>
+  <div class="sec-rule"></div>
+
+  <div class="quiz-wrap">
+    <p class="q-counter" id="q-counter">Question 1 of 12</p>
+    <div class="progress"><div class="progress-inner" id="q-progress" style="width:8%"></div></div>
+    <p class="q-text" id="q-text"></p>
+    <div class="opts" id="q-opts"></div>
+    <div class="q-footer">
+      <div class="feedback" id="q-feedback"></div>
+      <button class="btn" id="q-next" onclick="nextQ()" style="display:none;">Next →</button>
+    </div>
+  </div>
+</section>
+
+</div><!-- /wrap -->
+
+<script>
+// ── ADDRESS CALCULATOR ──
+function calcAddress() {
+  const memBits = parseInt(document.getElementById('mem-bits').value);
+  const blockSize = parseInt(document.getElementById('block-size').value);
+  const cacheLines = parseInt(document.getElementById('cache-lines').value);
+  const k = parseInt(document.getElementById('associativity').value);
+  const testAddr = document.getElementById('test-addr').value.replace(/\s/g,'');
+
+  if (!memBits || !blockSize || !cacheLines) return;
+  if (!Number.isInteger(Math.log2(blockSize)) || !Number.isInteger(Math.log2(cacheLines))) {
+    document.getElementById('calc-result').classList.add('show');
+    document.getElementById('result-rows').innerHTML = '<div class="result-row"><span class="result-label">Error</span><span style="color:var(--accent);font-family:var(--mono)">Block size and cache lines must be powers of 2</span></div>';
+    return;
+  }
+
+  const wordBits = Math.log2(blockSize);
+  const sets = cacheLines / k;
+  const lineBits = k === 1 ? Math.log2(cacheLines) : Math.log2(sets);
+  const tagBits = memBits - lineBits - wordBits;
+  const mapType = k === 1 ? 'Direct Mapped' : k >= cacheLines ? 'Fully Associative' : `${k}-Way Set-Associative`;
+  const lineLabel = k === 1 ? 'Line' : 'Set';
+
+  const rows = [
+    ['Mapping Type', mapType],
+    ['Total Address Bits', `${memBits} bits`],
+    ['Word (Offset) Bits', `${wordBits} bits (block size = 2^${wordBits})`],
+    [lineLabel + ' Bits', `${lineBits} bits (${sets} sets)`],
+    ['Tag Bits', `${tagBits} bits`],
+    ['Address Format', `[ Tag: ${tagBits} | ${lineLabel}: ${lineBits} | Word: ${wordBits} ]`],
+  ];
+
+  document.getElementById('result-rows').innerHTML = rows.map(([l,v]) =>
+    `<div class="result-row"><span class="result-label">${l}</span><span class="result-val" style="font-size:13px">${v}</span></div>`
+  ).join('');
+
+  // test address
+  let splitHtml = '';
+  if (testAddr && testAddr.length === memBits) {
+    const tagPart = testAddr.slice(0, tagBits);
+    const linePart = testAddr.slice(tagBits, tagBits + lineBits);
+    const wordPart = testAddr.slice(tagBits + lineBits);
+    const lineNum = parseInt(linePart, 2);
+    splitHtml = `
+<strong>Address: ${testAddr}</strong><br>
+<span style="color:var(--accent)">Tag:  ${tagPart} (${parseInt(tagPart,2)})</span><br>
+<span style="color:var(--accent2)">${lineLabel}: ${linePart} = ${lineLabel} ${lineNum}</span><br>
+<span style="color:var(--accent3)">Word: ${wordPart} (offset ${parseInt(wordPart,2)})</span>`;
+  } else if (testAddr) {
+    splitHtml = `<span style="color:var(--accent)">Address must be exactly ${memBits} bits. You entered ${testAddr.length}.</span>`;
+  }
+
+  document.getElementById('split-display').innerHTML = splitHtml;
+  document.getElementById('calc-result').classList.add('show');
+}
+
+// ── DISK CALCULATOR ──
+function calcDisk() {
+  const rpm = parseFloat(document.getElementById('d-rpm').value);
+  const tracks = parseFloat(document.getElementById('d-tracks').value);
+  const sectors = parseFloat(document.getElementById('d-sectors').value);
+  const seekRate = parseFloat(document.getElementById('d-seek-rate').value);
+  const seekN = parseFloat(document.getElementById('d-seek-n').value);
+
+  const msPerRev = 60000 / rpm;
+  const avgRotLatency = msPerRev / 2;
+  const transferTime = msPerRev / sectors;
+  const avgTracksTraversed = tracks / 3;
+  const avgSeekTime = (avgTracksTraversed / seekN) * seekRate;
+  const totalTime = avgSeekTime + avgRotLatency + transferTime;
+
+  document.getElementById('disk-result').innerHTML = `
+<span style="color:var(--muted)">Time per revolution:</span> ${msPerRev.toFixed(4)} ms<br>
+<span style="color:var(--accent)">i. Avg Seek Time:</span> ${avgSeekTime.toFixed(2)} ms (avg ${avgTracksTraversed.toFixed(0)} tracks × ${seekRate}ms/${seekN} tracks)<br>
+<span style="color:var(--accent2)">ii. Avg Rotational Latency:</span> ${avgRotLatency.toFixed(3)} ms (half revolution)<br>
+<span style="color:var(--accent3)">iii. Transfer Time (1 sector):</span> ${transferTime.toFixed(4)} ms<br>
+<strong>iv. Total Average Access Time: ${totalTime.toFixed(3)} ms</strong>`;
+  document.getElementById('disk-result').classList.add('show');
+}
+
+// ── QUIZ ──
+const questions = [
+  {
+    q: "A direct-mapped cache has 32 lines and main memory is 2¹⁶ bytes with block size of 8 bytes. How many bits are in the LINE field?",
+    opts:["3 bits","5 bits","8 bits","4 bits"], ans:1,
+    exp:"32 lines = 2⁵ → 5 line bits. Word=3 (block=8=2³), Tag=16−5−3=8."
+  },
+  {
+    q: "A 4-way set-associative cache has 32 lines. Main memory is 2¹⁶ bytes, block size 8 bytes. How many SETS are there?",
+    opts:["32","4","16","8"], ans:3,
+    exp:"Sets = 32 lines / 4-way = 8 sets."
+  },
+  {
+    q: "In a 4-way set-associative cache with 32 lines (2¹⁶ memory, 8B block), address 0001 0001 0011 1011 maps to which SET?",
+    opts:["Set 3","Set 7","Set 1","Set 5"], ans:1,
+    exp:"Set bits = bits [5:3] of the address = 111 = 7. Set 7."
+  },
+  {
+    q: "Why is the tag value stored alongside data in each cache line?",
+    opts:[
+      "To store the data size",
+      "To identify which main memory block currently occupies the line",
+      "To speed up write-back operations",
+      "To count cache hits"
+    ], ans:1,
+    exp:"Multiple blocks map to the same line. The tag identifies WHICH block is currently there, enabling hit/miss detection."
+  },
+  {
+    q: "Which cache mapping technique has the highest hardware complexity but lowest miss rate?",
+    opts:["Direct Mapped","Set-Associative","Fully Associative","Write-Through"], ans:2,
+    exp:"Fully associative — any block → any line = no conflicts. But needs comparators for ALL lines simultaneously."
+  },
+  {
+    q: "SRAM is used for cache while DRAM is used for main memory. The main reason is:",
+    opts:[
+      "SRAM is larger and cheaper",
+      "DRAM is faster than SRAM",
+      "SRAM is faster but more expensive — cost-prohibitive at GB scale",
+      "DRAM doesn't need refreshing"
+    ], ans:2,
+    exp:"SRAM is much faster but uses 6 transistors per bit vs DRAM's 1T+1C — far too expensive at GB scale."
+  },
+  {
+    q: "An HDD spins at 7200 RPM. What is the average rotational latency?",
+    opts:["8.33ms","4.17ms","2.08ms","16.67ms"], ans:1,
+    exp:"1 revolution = 60000/7200 = 8.33ms. Average = half rotation = 4.17ms."
+  },
+  {
+    q: "What is the difference between a hard failure and a soft error in memory?",
+    opts:[
+      "Hard failures are fast; soft errors are slow",
+      "Hard failures are permanent physical defects; soft errors are transient bit flips",
+      "Hard failures occur in SRAM; soft errors in DRAM",
+      "They are the same thing"
+    ], ans:1,
+    exp:"Hard = permanent physical damage (replace chip). Soft = transient disturbance (detectable and correctable with ECC)."
+  },
+  {
+    q: "A program loops through the same array 1000 times. Which locality principle does this exploit?",
+    opts:["Spatial locality","Temporal locality","Random locality","Write locality"], ans:1,
+    exp:"Temporal locality — the same data is accessed repeatedly over time. Cache keeps it close."
+  },
+  {
+    q: "In write-back policy, when is main memory updated?",
+    opts:[
+      "On every write to cache",
+      "Only when the cache line is evicted",
+      "Every clock cycle",
+      "Never — main memory isn't used"
+    ], ans:1,
+    exp:"Write-back defers main memory updates until the dirty cache line is replaced. Faster but risks inconsistency."
+  },
+  {
+    q: "For a direct-mapped cache, Block address 37 with 8 cache lines maps to which line?",
+    opts:["Line 3","Line 5","Line 4","Line 1"], ans:1,
+    exp:"37 mod 8 = 5. Cache Line 5."
+  },
+  {
+    q: "What is the average access time if hit ratio = 0.95, cache access = 5ns, main memory = 150ns?",
+    opts:["14.25ns","12.25ns","10ns","142.5ns"], ans:1,
+    exp:"T = 0.95×5 + 0.05×150 = 4.75 + 7.5 = 12.25ns."
+  }
+];
+
+let qIdx = 0, score = 0;
+function renderQ() {
+  const q = questions[qIdx];
+  document.getElementById('q-counter').textContent = `Question ${qIdx+1} of ${questions.length} · Score: ${score}`;
+  document.getElementById('q-progress').style.width = `${((qIdx+1)/questions.length)*100}%`;
+  document.getElementById('q-text').innerHTML = q.q;
+  document.getElementById('q-feedback').textContent = '';
+  document.getElementById('q-feedback').className = 'feedback';
+  document.getElementById('q-next').style.display = 'none';
+  const optsDiv = document.getElementById('q-opts');
+  optsDiv.innerHTML = '';
+  q.opts.forEach((o,i) => {
+    const btn = document.createElement('button');
+    btn.className = 'opt';
+    btn.textContent = o;
+    btn.onclick = () => {
+      document.querySelectorAll('.opt').forEach(b=>b.disabled=true);
+      if (i===q.ans){btn.classList.add('correct');document.getElementById('q-feedback').textContent='✓ '+q.exp;document.getElementById('q-feedback').className='feedback ok';score++;}
+      else{btn.classList.add('wrong');document.querySelectorAll('.opt')[q.ans].classList.add('correct');document.getElementById('q-feedback').textContent='✗ '+q.exp;document.getElementById('q-feedback').className='feedback nope';}
+      document.getElementById('q-next').style.display='inline-block';
+    };
+    optsDiv.appendChild(btn);
+  });
+}
+function nextQ(){
+  qIdx++;
+  if(qIdx>=questions.length){
+    document.getElementById('q-text').innerHTML=`Quiz done! <strong>${score}/${questions.length}</strong> — ${score>=10?'Solid exam prep.':score>=7?'Good, keep drilling the weak spots.':'Review the concepts and try again.'}`;
+    document.getElementById('q-opts').innerHTML='';
+    document.getElementById('q-next').textContent='Restart';
+    document.getElementById('q-next').onclick=()=>{qIdx=0;score=0;document.getElementById('q-next').textContent='Next →';document.getElementById('q-next').onclick=nextQ;renderQ();};
+    document.getElementById('q-next').style.display='inline-block';
+    return;
+  }
+  renderQ();
+}
+renderQ();
+</script>
+</body>
+</html>
